@@ -34,7 +34,6 @@ def initialize_game_state() -> np.ndarray:
     return np.zeros((6, 7), BoardPiece(0))
 
 
-
 def pretty_print_board(board: np.ndarray) -> str:
     """
     Should return `board` converted to a human readable string representation,
@@ -67,7 +66,6 @@ def pretty_print_board(board: np.ndarray) -> str:
     return '|==============|\n' + EndStr
 
 
-
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
@@ -96,7 +94,6 @@ def string_to_board(pp_board: str) -> np.ndarray:
     return BoardArr
 
 
-
 def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece, copy: bool = False) -> np.ndarray:
     """
     Sets board[i, action] = player, where i is the lowest open row. The modified
@@ -113,17 +110,6 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
 
     return board
 
-def get_Last_Action_Col(board: np.ndarray, player: BoardPiece) -> np.ndarray:
-    LastActions = np.ndarray(5,2)
-    indRow = 5
-    for col in range(6,-1,-1):
-        for row in range(5,-1,-1):
-            if board[row,col] == player:
-                indRow +=1
-                LastActions[col, 0] = indRow
-                LastActions[col, 1] = col
-            indRow -= 1
-
 
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
@@ -132,9 +118,6 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
     If desired, the last action taken (i.e. last column played) can be provided
     for potential speed optimisation.
     """
-    # is last action given
-    # if last_action is None:
-    #     return connected_four_without_LastAction(board, player)
 
     # with rec
     if last_action is None:
@@ -148,18 +131,11 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
                 continue
 
     BoardCol = (board[0:6, last_action]).T
-    # find row of the last action
-    # row = 0
-    # i = 5
-    # while i >= 0:
-    #     if BoardCol[i] == player:
-    #         row = i
-    #         break
-    #     i -= 1
 
-
+    # find free row in this col
     row = len(np.argwhere(board[:, last_action] == 0))
     row = board.shape[0] - row - 1
+
     # check horizontal
     BoardRow = board[row, 0:7].T
     c = 0
@@ -202,69 +178,6 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
                 return True
         else:
             C = 0
-    return False
-
-
-def connected_four_without_LastAction(board: np.ndarray, player: BoardPiece) -> bool:
-    """
-    Returns True if there are four adjacent pieces equal to `player` arranged
-    in either a horizontal, vertical, or diagonal line. Returns False otherwise.
-    If desired, the last action taken (i.e. last column played) can be provided
-    for potential speed optimisation.
-    """
-
-    # check horizontal
-    for row in range(6):
-        if np.count_nonzero(board[row, 0:7] == player) > 3:
-            BoardRow = board[row, 0:7]
-            c = 0
-            for index in range(7):
-                if BoardRow[index] == player:
-                    c += 1
-                    if c == 4:
-                        return True
-                else:
-                    c = 0
-
-    # check vertical
-    for col in range(7):
-        if np.count_nonzero(board[0:7, col] == player) > 3:
-            BoardCol = board[0:7, col].T
-            count = 0
-            for ind in range(6):
-                if BoardCol[ind] == player:
-                    count += 1
-                    if count == 4:
-                        return True
-                else:
-                    count = 0
-
-    # check diagonal(main)
-    for index_diag in range(-2, 4):
-        if np.count_nonzero(np.diag(board, index_diag) == player) > 3:
-            diagList = np.diag(board, index_diag)
-            counter = 0
-            for value in diagList:
-                if value == player:
-                    counter += 1
-                    if counter == 4:
-                        return True
-                else:
-                    counter = 0
-
-    # check diagonal(opposite)
-    for index_opp_diag in range(-2, 4):
-        if np.count_nonzero(np.diag(board[::-1], index_opp_diag) == player) > 3:
-            DiagList = np.diag(board[::-1], index_opp_diag)
-            C = 0
-            for val in DiagList:
-                if val == player:
-                    C += 1
-                    if C == 4:
-                        return True
-                else:
-                    C = 0
-
     return False
 
 
