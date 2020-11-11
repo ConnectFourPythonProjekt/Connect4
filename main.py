@@ -2,6 +2,9 @@ import numpy as np
 from typing import Optional, Callable
 from agents.common import PlayerAction, BoardPiece, SavedState, GenMove
 from agents import common
+from agents.agents_random import generate_move
+
+
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
     action = PlayerAction(-1)
@@ -68,14 +71,14 @@ def human_vs_agent(
 
 
 if __name__ == '__main__':
-    human_vs_agent(user_move)
+    human_vs_agent(generate_move)
     board = np.zeros((6, 7))
-    board[0, 0:7] = [0, 2, 0, 1, 1, 2, 2]
-    board[1, 0:7] = [0, 0, 0, 0, 1, 2, 1]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 1, 2]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[0, 0:7] = [2, 1, 1, 0, 1, 0, 2]
+    board[1, 0:7] = [0, 2, 1, 1, 1, 0, 1]
+    board[2, 0:7] = [0, 1, 2, 2, 1, 0, 2]
+    board[3, 0:7] = [0, 2, 2, 2, 0, 0, 2]
+    board[4, 0:7] = [0, 1, 1, 0, 0, 0, 2]
+    board[5, 0:7] = [0, 2, 1, 0, 0, 0, 1]
     #
     # board_win1_hor = np.zeros((6, 7))
     # board_win1_hor[0, 0:7] = [1, 2, 2, 1, 1, 2, 2]
@@ -92,4 +95,4 @@ if __name__ == '__main__':
     # board_win2_diagonal[3, 0:7] = [1, 2, 2, 0, 0, 0, 0]
     # board_win2_diagonal[4, 0:7] = [1, 1, 0, 0, 0, 0, 0]
     # board_win2_diagonal[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # print(common.connected_four(board,1))
+    # print(common.connected_four(board,2,))
