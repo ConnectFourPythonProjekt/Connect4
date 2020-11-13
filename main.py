@@ -95,4 +95,4 @@ if __name__ == '__main__':
     # board_win2_diagonal[3, 0:7] = [1, 2, 2, 0, 0, 0, 0]
     # board_win2_diagonal[4, 0:7] = [1, 1, 0, 0, 0, 0, 0]
     # board_win2_diagonal[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # print(common.connected_four(board,2,))
+    # print(common.connected_four(board,2))

@@ -33,7 +33,7 @@ def initialize_game_state() -> np.ndarray:
     """
     return np.zeros((6, 7), BoardPiece(0))
 
-
+# TODO:test
 def pretty_print_board(board: np.ndarray) -> str:
     """
     Should return `board` converted to a human readable string representation,
@@ -65,7 +65,7 @@ def pretty_print_board(board: np.ndarray) -> str:
 
     return '|==============|\n' + EndStr
 
-
+# TODO: test
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
@@ -93,7 +93,7 @@ def string_to_board(pp_board: str) -> np.ndarray:
 
     return BoardArr
 
-
+# TODO: copy and "else : continue"
 def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece, copy: bool = False) -> np.ndarray:
     """
     Sets board[i, action] = player, where i is the lowest open row. The modified
@@ -110,7 +110,7 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
 
     return board
 
-
+# TODO: last action = None
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
     Returns True if there are four adjacent pieces equal to `player` arranged
