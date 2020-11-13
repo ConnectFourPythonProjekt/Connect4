@@ -156,7 +156,7 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
                 return True
         else:
             count = 0
-
+    # test commit
     # check diagonal(main)
     diagList = np.diag(board, (last_action - row))
     counter = 0
