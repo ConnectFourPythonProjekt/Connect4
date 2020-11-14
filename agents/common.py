@@ -61,12 +61,12 @@ def pretty_print_board(board: np.ndarray) -> str:
         board: ndarray representation of the board
 
     Return:
-        str: human readable string representation of the board, human readable
+        str: human readable string representation of the board
     """
 
     EndStr = '|==============|\n|0 1 2 3 4 5 6 |'
     for row in range(6):
-        tmpString = '|'
+        tmpString = '|'     # begin of the row
         for cell in range(7):
             if board[row, cell] == PLAYER1:
                 tmpString += 'X '
@@ -74,12 +74,13 @@ def pretty_print_board(board: np.ndarray) -> str:
                 tmpString += 'O '
             else:
                 tmpString += '  '
-        tmpString += '|'
+        tmpString += '|'        # end of the row
         EndStr = tmpString + '\n' + EndStr  # add new string at the beginning of the last one
 
     return '|==============|\n' + EndStr
 
 
+# TODO: komentara na 105red neshto ne mojah da go izmislq
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
@@ -88,20 +89,20 @@ def string_to_board(pp_board: str) -> np.ndarray:
     Player1 == X Player2 == O
 
     Arguments:
-        board: human readable string representation of the board, human readable
+        pp_board: human readable string representation of the board, human readable
 
     Return:
-        ndarray: ndarray representation of the board
+        np.ndarray: ndarray representation of the board
     """
     BoardArr = np.zeros((6, 7), BoardPiece(0))
     splitStr = pp_board.split('\n')
-    splitStr.pop(8)
-    splitStr.pop(7)
-    splitStr.pop(0)
+    splitStr.pop(8)  # | pop the rows where there are
+    splitStr.pop(7)  # | |==============| or
+    splitStr.pop(0)  # | |0 1 2 3 4 5 6 |
     for row in range(6):
         rowStr = splitStr.pop(0)
         tmpRow = []
-        for cell in range(1, 15, 2):
+        for cell in range(1, 15, 2):    # first value of the string is |; there is a player piece in every two chars??
             if rowStr[cell] == 'O':
                 tmpRow.append(PLAYER2)
             elif rowStr[cell] == 'X':
@@ -113,7 +114,7 @@ def string_to_board(pp_board: str) -> np.ndarray:
     return BoardArr
 
 
-# TODO: copy test
+# TODO: trqbwa ni copy test
 def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece, copy: bool = False) -> np.ndarray:
     """
     Sets board[i, action] = player, where i is the lowest open row. The modified
@@ -126,10 +127,10 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
         copy: board copy if needed
 
     Return:
-        ndarray: ndarray representation of the board included the last action
+        np.ndarray: ndarray representation of the board included the last action
 
     """
-    if copy == True:
+    if copy:
         board_before = board.copy()
     for i in range(board.shape[0]):
         if board[i, action] == NO_PLAYER:
@@ -165,10 +166,10 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
 
     # find free row in this col
     row = len(np.argwhere(board[:, last_action] == 0))  # counting zeros in column
-    row = board.shape[0] - row - 1
+    row = board.shape[0] - row - 1      # the row of the last action
 
     # check horizontal
-    BoardRow = board[row, 0:7].T    # get whole row of last action
+    BoardRow = board[row, 0:7].T  # get whole row of last action
     c = 0
     for index in range(7):
         if BoardRow[index] == player:
@@ -194,7 +195,7 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
     counter = 0
     for value in diagList:
         if value == player:
-            counter += 1    # count pieces of player in a row
+            counter += 1  # count pieces of player in a row
             if counter == 4:
                 return True
         else:
@@ -205,7 +206,7 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
     C = 0
     for val in DiagList:
         if val == player:
-            C += 1      # count pieces of player in a row
+            C += 1  # count pieces of player in a row
             if C == 4:
                 return True
         else:
