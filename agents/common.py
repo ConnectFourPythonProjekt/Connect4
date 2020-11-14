@@ -36,6 +36,7 @@ def initialize_game_state() -> np.ndarray:
     Return:
         np.ndarray: initialized empty board
     """
+    # test
     return np.zeros((6, 7), BoardPiece(0))
 
 
