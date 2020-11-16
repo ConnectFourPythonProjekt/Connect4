@@ -80,8 +80,6 @@ def pretty_print_board(board: np.ndarray) -> str:
 
     return '|==============|\n' + EndStr
 
-
-# TODO: komentara na 105red neshto ne mojah da go izmislq
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
@@ -96,14 +94,14 @@ def string_to_board(pp_board: str) -> np.ndarray:
     """
 
     BoardArr = np.zeros((6, 7), BoardPiece(0))
-    splitStr = pp_board.split('\n')  # list of the rows represented as strings
-    splitStr.pop(8)  # pops the rows where there is
-    splitStr.pop(7)  # |==============| or
-    splitStr.pop(0)  # |0 1 2 3 4 5 6 |
-    for row in range(5,-1,-1):  # TODO
-        rowStr = splitStr.pop(0)  # pops the zero element of the list
-        tmpRow = []  # help empty list to store the string characters converted to board pieces
-        for cell in range(1, 15, 2):    # ? first value of the string is |; there is a player piece in every two chars??
+    splitStr = pp_board.split('\n')
+    splitStr.pop(8)  # | pops the rows where there is
+    splitStr.pop(7)  # | |==============| or
+    splitStr.pop(0)  # | |0 1 2 3 4 5 6 |
+    for row in range(5,-1,-1):
+        rowStr = splitStr.pop(0)
+        tmpRow = []  # stores the string characters converted to board pieces
+        for cell in range(1, 15, 2):    # index 0 of each substring is | and every cell contains board piece and a space
             if rowStr[cell] == 'O':
                 tmpRow.append(PLAYER2)
             elif rowStr[cell] == 'X':
@@ -129,7 +127,7 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
         copy: board copy if needed
 
     Return:
-        np.ndarray: ndarray representation of the board included the last action
+        np.ndarray: ndarray representation of the board including the last action
 
     """
     if copy:
@@ -150,69 +148,70 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
 
     Arguments:
         board: ndarray representation of the board
-        player: which player was on turn
-        last_action: column, where was the last action
+        player: a player whose victory is being checked
+        last_action: column, where the last action was
 
     Return:
         bool: True, when current player wins, False, when game isn't won by player
     """
 
-    # check if there is last action given
+    # checks if there is last action provided
+    # if it's not provided iterate through the whole board and check if the player won
     if last_action is None:
-        for rec in range(7):  # set last action as column from board
-            check = connected_four(board, player, rec)  # call itself now with given last action
+        for column in range(7):
+            check = connected_four(board, player, column)
             if check:
-                return True  # there is a win
-            if not check and rec == 6:
+                return True
+            if not check and column == 6:
                 return False  # there is no win on the board and we already checked all columns
 
-    # find free row in this col
-    row = len(np.argwhere(board[:, last_action] == 0))  # counting zeros in column
+    # finds free row in this column
+    row = len(np.argwhere(board[:, last_action] == 0))  # counts zeros in column
     row = board.shape[0] - row - 1      # the row of the last action
 
-    # check horizontal
-    BoardRow = board[row, 0:7].T  # get whole row of last action
-    c = 0
-    for index in range(7):
-        if BoardRow[index] == player:
-            c += 1  # count pieces of player in a row
-            if c == 4:
-                return True
-        else:
-            c = 0
+    # checks horizontal
+    BoardRow = board[row, 0:7].T  # gets whole row of last action
+    if four_in_a_row(BoardRow, player):
+        return True
 
-    # check vertical
-    BoardCol = (board[0:6, last_action]).T  # get whole column of last action
-    count = 0
-    for ind in range(6):
-        if BoardCol[ind] == player:
-            count += 1  # count pieces of player in a row
-            if count == 4:
-                return True
-        else:
-            count = 0
+    # checks vertical
+    BoardCol = (board[0:6, last_action]).T  # gets whole column of last action
+    if four_in_a_row(BoardCol, player):
+        return True
 
-    # check diagonal(main)
-    diagList = np.diag(board, (last_action - row))  # get (left over right down) diagonal of last action
+    # checks diagonal(main)
+    diagList = np.diag(board, (last_action - row))  # gets (left over right down) diagonal of last action
+    if four_in_a_row(diagList, player):
+        return True
+
+    # checks diagonal(opposite)
+    DiagList = np.diag(board[::-1], (last_action - (5 - row)))  # gets (left down right over) diagonal of last action
+    if four_in_a_row(DiagList, player):
+        return True
+
+    return False
+
+
+def four_in_a_row(array: np.ndarray, player: BoardPiece) -> bool:
+    """
+        Counts how many adjacent pieces equal to `player` does the vertical/horizontal/diagonal contains.
+        If they are four returns True, otherwise False.
+
+        Arguments:
+            array: ndarray to be checked if contains four adjacent pieces equal to `player`
+            player: a player whose victory is being checked
+
+        Return:
+            bool: True, when current player wins, False, when game isn't won by player
+        """
     counter = 0
-    for value in diagList:
-        if value == player:
-            counter += 1  # count pieces of player in a row
+    for index in array:
+        if index == player:
+            counter += 1
             if counter == 4:
                 return True
         else:
             counter = 0
-
-    # check diagonal(opposite)
-    DiagList = np.diag(board[::-1], (last_action - (5 - row)))  # get (left down right over) diagonal of last action
-    C = 0
-    for val in DiagList:
-        if val == player:
-            C += 1  # count pieces of player in a row
-            if C == 4:
-                return True
-        else:
-            C = 0
     return False
 
 
@@ -224,8 +223,8 @@ def check_end_state(board: np.ndarray, player: BoardPiece, last_action: Optional
 
      Arguments:
         board: ndarray representation of the board
-        player: which player was on turn
-        last_action: column, where was the last action
+        player: a player whose victory is being checked
+        last_action: column, where the last action was
 
     Return:
         GameState: current game state
