@@ -34,9 +34,9 @@ def initialize_game_state() -> np.ndarray:
         ---
 
     Return:
-        np.ndarray: initialized empty board
+        np.ndarray: initialized board, filled with zeros
     """
-    # test
+
     return np.zeros((6, 7), BoardPiece(0))
 
 
@@ -65,6 +65,7 @@ def pretty_print_board(board: np.ndarray) -> str:
     """
 
     EndStr = '|==============|\n|0 1 2 3 4 5 6 |'
+    # iteration through the board and string construction
     for row in range(6):
         tmpString = '|'     # begin of the row
         for cell in range(7):
@@ -75,7 +76,7 @@ def pretty_print_board(board: np.ndarray) -> str:
             else:
                 tmpString += '  '
         tmpString += '|'        # end of the row
-        EndStr = tmpString + '\n' + EndStr  # add new string at the beginning of the last one
+        EndStr = tmpString + '\n' + EndStr  # works as the stack principle and pushes the next row
 
     return '|==============|\n' + EndStr
 
@@ -84,32 +85,33 @@ def pretty_print_board(board: np.ndarray) -> str:
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
-    This is quite useful for debugging, when the agent crashed and you have the last
-    board state as a string.
+
     Player1 == X Player2 == O
 
     Arguments:
-        pp_board: human readable string representation of the board, human readable
+        pp_board: human readable string representation of the board
 
     Return:
         np.ndarray: ndarray representation of the board
     """
+
     BoardArr = np.zeros((6, 7), BoardPiece(0))
-    splitStr = pp_board.split('\n')
-    splitStr.pop(8)  # | pop the rows where there are
-    splitStr.pop(7)  # | |==============| or
-    splitStr.pop(0)  # | |0 1 2 3 4 5 6 |
-    for row in range(6):
-        rowStr = splitStr.pop(0)
-        tmpRow = []
-        for cell in range(1, 15, 2):    # first value of the string is |; there is a player piece in every two chars??
+    splitStr = pp_board.split('\n')  # list of the rows represented as strings
+    splitStr.pop(8)  # pops the rows where there is
+    splitStr.pop(7)  # |==============| or
+    splitStr.pop(0)  # |0 1 2 3 4 5 6 |
+    for row in range(5,-1,-1):  # TODO
+        rowStr = splitStr.pop(0)  # pops the zero element of the list
+        tmpRow = []  # help empty list to store the string characters converted to board pieces
+        for cell in range(1, 15, 2):    # ? first value of the string is |; there is a player piece in every two chars??
             if rowStr[cell] == 'O':
                 tmpRow.append(PLAYER2)
             elif rowStr[cell] == 'X':
                 tmpRow.append(PLAYER1)
             else:
                 tmpRow.append(NO_PLAYER)
-        BoardArr[5 - row] = np.asarray(tmpRow)  # add new row at the beginning of the last one
+
+        BoardArr[row] = np.asarray(tmpRow)  # works as the stack principle and pushes the next row
 
     return BoardArr
 
@@ -122,8 +124,8 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
 
     Arguments:
         board: ndarray representation of the board
-        action: column, in which was the last action
-        player: which player was on turn
+        action: column, where the player wants to have a piece
+        player: the player whose turn it is
         copy: board copy if needed
 
     Return:
