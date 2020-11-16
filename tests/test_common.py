@@ -218,8 +218,8 @@ def test_check_end_state():
 
     # test still playing
     board = initialize_game_state()
-    apply_player_action(board, 2, BoardPiece(2), False)
-    apply_player_action(board, 3, BoardPiece(1), False)
+    apply_player_action(board, 2, BoardPiece(2), True)
+    apply_player_action(board, 3, BoardPiece(1), True)
     ret = check_end_state(board, 1, 3)
     assert ret == GameState.STILL_PLAYING
 

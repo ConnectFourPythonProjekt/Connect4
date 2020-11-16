@@ -114,7 +114,6 @@ def string_to_board(pp_board: str) -> np.ndarray:
     return BoardArr
 
 
-# TODO: trqbwa ni copy test
 def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece, copy: bool = False) -> np.ndarray:
     """
     Sets board[i, action] = player, where i is the lowest open row. The modified
