@@ -80,6 +80,7 @@ def pretty_print_board(board: np.ndarray) -> str:
 
     return '|==============|\n' + EndStr
 
+
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
