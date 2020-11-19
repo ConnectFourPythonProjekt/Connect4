@@ -88,17 +88,16 @@ def evaluate_row(board: np.ndarray, board_row: np.ndarray, player: BoardPiece, i
     while i < len(list_of_pieces):
         if list_of_pieces[i].x != index_of_row:
             list_of_pieces.remove(list_of_pieces[i])
-            i = i -1
+            i -= 1
         else:
-            i = i + 1
+            i += 1
+
+    if in_a_row(board_row, player) == 2 and len(list_of_pieces) > 2:
+        if count_spaces(list_of_pieces, board_row, player, 1):
+            return 27
 
     if in_a_row(board_row, player) == 4:
         return 64
-
-    spaces = 0
-    if in_a_row(board_row, player) == 2 and len(list_of_pieces) > 2:
-        if count_spaces(list_of_pieces,board_row,player,1):
-            return 27
 
 
 
@@ -142,16 +141,12 @@ def in_a_row(array: np.ndarray, player: BoardPiece) -> int:
     is_player = np.diff(concatenate)
     return np.max(np.flatnonzero(is_player == -1) - np.flatnonzero(is_player == 1))
 
-def count_spaces(list: [Position], board_row: np.ndarray, player : BoardPiece, spaces_needed: int) -> bool:
-    spaces = 0
+
+def count_spaces(list: [Position], board_row: np.ndarray, player: BoardPiece, spaces_needed: int) -> bool:
     for i in range(len(list)):
-        for j in range(len(list)):
-            spaces = list[i].y - list[j].y
-            zero_count = 0
-            if i > j:
-                zero_count = np.count_nonzero(board_row[j:i] == 0)
-            else:
-                zero_count = np.count_nonzero(board_row[i:j] == 0)
+        for j in range(i + 1, len(list)):
+            spaces = list[j].y - list[i].y - 1
+            zero_count = np.count_nonzero(board_row[list[i].y:(list[j].y + 1)] == 0)
             if spaces == spaces_needed and zero_count == spaces:
                 return True
     return False
