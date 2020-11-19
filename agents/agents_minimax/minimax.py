@@ -12,26 +12,6 @@ DEPTH = 4
 ROW = 6
 COL = 7
 
-
-@dataclass
-class Position:
-    """
-    board[x, y] with evaluation of the cell
-    """
-
-    # def __init__(self, x, y, value: Optional[int] = None):
-    #     self.x = x
-    #     self.y = y
-    #     self.value = value
-
-    x: int
-    y: int
-    value: Optional[int] = None
-
-    def positions(self) -> (int, int, Optional[int]):
-        return self.x, self.y, self.value
-
-
 def alpha_beta_action(board: np.ndarray, player: BoardPiece) -> PlayerAction:
     """
     Main call function. Returns where player has to play
@@ -49,7 +29,8 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     #     return
     pass
 
-def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> Position:
+
+def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     """
 
     """
@@ -78,7 +59,6 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> Position:
         if np.count_nonzero(opp_diag == 0) != 0:
             value_opp_diag_list.append(evaluate_position(opp_diag, player))
     value_opp_diag = np.max(value_opp_diag_list)
-
 
     return max(value_col, value_row, value_main_diag, value_opp_diag)
 
