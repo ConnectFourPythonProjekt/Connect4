@@ -98,7 +98,7 @@ def evaluate_row(board: np.ndarray, board_row: np.ndarray, player: BoardPiece, i
 
     if in_a_row(board_row, player) == 4:
         return 64
-
+#     DANooooooo
 
 def evaluate_column(board_column: np.ndarray, player: BoardPiece, index_of_column: int) -> int:
     """
