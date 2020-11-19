@@ -49,101 +49,62 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     #     return
     pass
 
-
-# X X X X -> 4**3 = 64
-# X X X -> 3**3 = 27
-# X X - X -> 3**3 = 27
-# X X -> 2**3 = 8
-# X - - X -> 2**3 = 8
-# X - X -> 2**3 = 8
-# X -> 1
 def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> Position:
     """
 
     """
-    value_row = 0
+    value_row_list = []
     for row in range(ROW):
-        if np.count_nonzero(board[row, :] == 0) != 0 or np.count_nonzero(board[row, :] == 0) != COL:
-            value_row = evaluate_row(board, board[row, :], player, row)
+        if np.count_nonzero(board[row, :] == 0) != 0:
+            value_row_list.append(evaluate_position(board[row, :], player))
+    value_row = np.max(value_row_list)
 
-    value_col = 0
+    value_col_list = []
     for col in range(COL):
-        if np.count_nonzero(board[:, col] == 0) != 0 or np.count_nonzero(board[:, col] == 0) != ROW:
-            value_col = evaluate_column(board, board[:, col], player, col)
+        if np.count_nonzero(board[:, col] == 0) != 0:
+            value_col_list.append(evaluate_position(board[:, col].T, player))
+    value_col = np.max(value_col_list)
+
+    value_main_diag_list = []
+    for diag in range(-2, 5):
+        main_diag = np.diag(board, diag)
+        if np.count_nonzero(main_diag == 0) != 0:
+            value_main_diag_list.append(evaluate_position(main_diag, player))
+    value_main_diag = np.max(value_main_diag_list)
+
+    value_opp_diag_list = []
+    for diag in range(-2, 5):
+        opp_diag = np.diag(board[::-1], diag)
+        if np.count_nonzero(opp_diag == 0) != 0:
+            value_opp_diag_list.append(evaluate_position(opp_diag, player))
+    value_opp_diag = np.max(value_opp_diag_list)
 
 
-# X X X X -> 4**3 = 64 READY
-# X X X -> 3**3 = 27
-# X X - X -> 3**3 = 27 READY
-# X X -> 2**3 = 8
-# X - - X -> 2**3 = 8
-# X - X -> 2**3 = 8
-# X -> 1
-def evaluate_row(board: np.ndarray, board_row: np.ndarray, player: BoardPiece, index_of_row: int) -> int:
+    return max(value_col, value_row, value_main_diag, value_opp_diag)
+
+
+def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     """
     Returns evaluation of current row for the player
     """
-    list_of_pieces = where_are_my_pieces(board, player)
-    i = 0
-    while i < len(list_of_pieces):
-        if list_of_pieces[i].x != index_of_row:
-            list_of_pieces.remove(list_of_pieces[i])
-            i -= 1
-        else:
-            i += 1
 
-    if in_a_row(board_row, player) == 2 and len(list_of_pieces) > 2:
-        if count_spaces(list_of_pieces, board_row, player, 1):
-            return 27
+    index = len(array_from_board) - 3
 
-    if in_a_row(board_row, player) == 4:
-        return 64
-#     DANooooooo
-# galaaaaaaaaa
-
-def evaluate_column(board_column: np.ndarray, player: BoardPiece, index_of_column: int) -> int:
-    """
-    Returns evaluation of current column for the player
-    """
-    pass
+    list_of_values = []
+    for i in range(index):
+        tmp = array_from_board[i:i + 4]
+        if np.count_nonzero(tmp == player) == 4:
+            list_of_values.append(64)
+        if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
+            list_of_values.append(27)
+        if np.count_nonzero(tmp == player) == 2 and np.count_nonzero(tmp == BoardPiece(0)) == 2:
+            list_of_values.append(8)
+        if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
+            list_of_values.append(1)
+    if len(list_of_values) == 0:
+        return 0
+    else:
+        return np.max(list_of_values)
 
 
-def evaluate_main_diagonal(board_main_diagonal: np.ndarray, player: BoardPiece) -> int:
-    """
-    Returns evaluation of current main diagonal for the player
-    """
-    pass
-
-
-def evaluate_opposite_diagonal(board_opp_diagonal: np.ndarray, player: BoardPiece) -> int:
-    """
-    Returns evaluation of current opp. diagonal for the player
-    """
-    pass
-
-
-def where_are_my_pieces(board: np.ndarray, player: BoardPiece) -> [Position]:
-    list_of_pieces = []
-    for row in range(ROW):
-        for col in range(COL):
-            if board[row, col] == player:
-                pos = Position(x=row, y=col)
-                list_of_pieces.append(pos)
-    return list_of_pieces
-
-
-def in_a_row(array: np.ndarray, player: BoardPiece) -> int:
-    concatenate = np.concatenate(([False], array == player, [False])).astype(np.int8)
-    is_player = np.diff(concatenate)
-    return np.max(np.flatnonzero(is_player == -1) - np.flatnonzero(is_player == 1))
-
-
-def count_spaces(list: [Position], board_row: np.ndarray, player: BoardPiece, spaces_needed: int) -> bool:
-    for i in range(len(list)):
-        for j in range(i + 1, len(list)):
-            spaces = list[j].y - list[i].y - 1
-            zero_count = np.count_nonzero(board_row[list[i].y:(list[j].y + 1)] == 0)
-            if spaces == spaces_needed and zero_count == spaces:
-                return True
-    return False
 
