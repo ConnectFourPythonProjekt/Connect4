@@ -100,11 +100,6 @@ def evaluate_row(board: np.ndarray, board_row: np.ndarray, player: BoardPiece, i
         return 64
 
 
-
-
-
-
-
 def evaluate_column(board_column: np.ndarray, player: BoardPiece, index_of_column: int) -> int:
     """
     Returns evaluation of current column for the player
