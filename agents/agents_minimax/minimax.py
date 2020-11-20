@@ -11,17 +11,19 @@ from enum import Enum
 DEPTH = 4
 ROW = 6
 COL = 7
-# PLAYER_ON_TURN = BoardPiece
+PLAYER_ON_TURN = BoardPiece
+
 
 def alpha_beta_action(board: np.ndarray, player: BoardPiece):
     """
     Main call function. Returns where player has to play
     """
-    # PLAYER_ON_TURN = player
-    return alpha_beta_minimax(board, player, math.inf, -math.inf, DEPTH, True)
+    global PLAYER_ON_TURN
+    PLAYER_ON_TURN = player
+    return alpha_beta_minimax(board, player, math.inf, -math.inf, DEPTH)
 
 
-def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int, max_player: bool):
+def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int):
     """
     Alpha-beta pruning/Negamax. Called by alpha_beta_action
     """
@@ -36,25 +38,31 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
         return evaluate_curr_board(board, player)
 
-    if max_player:
-        tmp_board = board
+    save_value = []
+    global PLAYER_ON_TURN
+    if PLAYER_ON_TURN == player:
+        tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player)
-                value = alpha_beta_minimax(after_action, player, alpha, beta, depth-1, True)
-                board = tmp_board
+                PLAYER_ON_TURN = player2
+                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
+                board = tmp_board.copy()
                 if value > alpha:
                     alpha = value
                     if alpha >= beta:
                         break
+        if depth == 3:
+            save_value[col] = alpha
         return alpha
     else:
-        tmp_board = board
+        tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player2)
-                value = alpha_beta_minimax(after_action, player2, alpha, beta, depth-1, False)
-                board = tmp_board
+                PLAYER_ON_TURN = player
+                value = alpha_beta_minimax(after_action, player2, alpha, beta, depth - 1)
+                board = tmp_board.copy()
                 if value < beta:
                     beta = value
                     if alpha >= beta:
@@ -117,6 +125,3 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
         return 0
     else:
         return np.max(list_of_values)
-
-
-
