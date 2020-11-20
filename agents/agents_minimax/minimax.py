@@ -11,23 +11,55 @@ from enum import Enum
 DEPTH = 4
 ROW = 6
 COL = 7
+# PLAYER_ON_TURN = BoardPiece
 
-def alpha_beta_action(board: np.ndarray, player: BoardPiece) -> PlayerAction:
+def alpha_beta_action(board: np.ndarray, player: BoardPiece):
     """
     Main call function. Returns where player has to play
     """
-    return alpha_beta_minimax(board, player, math.inf, -math.inf, DEPTH)
+    # PLAYER_ON_TURN = player
+    return alpha_beta_minimax(board, player, math.inf, -math.inf, DEPTH, True)
 
 
-def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int) -> PlayerAction:
+def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int, max_player: bool):
     """
     Alpha-beta pruning/Negamax. Called by alpha_beta_action
     """
-    # if (depth == 0 or
-    #         game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
-    #         game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
-    #     return
-    pass
+    player2 = 0
+    if player == BoardPiece(1):
+        player2 = BoardPiece(2)
+    else:
+        player2 = BoardPiece(1)
+
+    if (depth == 0 or
+            game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
+            game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
+        return evaluate_curr_board(board, player)
+
+    if max_player:
+        tmp_board = board
+        for col in range(COL):
+            if np.count_nonzero(board[:, col] == 0) > 0:
+                after_action = common.apply_player_action(board, col, player)
+                value = alpha_beta_minimax(after_action, player, alpha, beta, depth-1, True)
+                board = tmp_board
+                if value > alpha:
+                    alpha = value
+                    if alpha >= beta:
+                        break
+        return alpha
+    else:
+        tmp_board = board
+        for col in range(COL):
+            if np.count_nonzero(board[:, col] == 0) > 0:
+                after_action = common.apply_player_action(board, col, player2)
+                value = alpha_beta_minimax(after_action, player2, alpha, beta, depth-1, False)
+                board = tmp_board
+                if value < beta:
+                    beta = value
+                    if alpha >= beta:
+                        break
+        return beta
 
 
 def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
@@ -47,14 +79,14 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     value_col = np.max(value_col_list)
 
     value_main_diag_list = []
-    for diag in range(-2, 5):
+    for diag in range(-2, 4):
         main_diag = np.diag(board, diag)
         if np.count_nonzero(main_diag == 0) != 0:
             value_main_diag_list.append(evaluate_position(main_diag, player))
     value_main_diag = np.max(value_main_diag_list)
 
     value_opp_diag_list = []
-    for diag in range(-2, 5):
+    for diag in range(-2, 4):
         opp_diag = np.diag(board[::-1], diag)
         if np.count_nonzero(opp_diag == 0) != 0:
             value_opp_diag_list.append(evaluate_position(opp_diag, player))

@@ -9,6 +9,7 @@ PLAYER1 = BoardPiece(1)  # board[i, j] == PLAYER1 where player 1 has a piece
 PLAYER2 = BoardPiece(2)  # board[i, j] == PLAYER2 where player 2 has a piece
 
 PlayerAction = np.int8  # The column to be played
+BOARD_BEFORE = np.ndarray
 
 
 class GameState(Enum):
@@ -18,7 +19,19 @@ class GameState(Enum):
 
 
 class SavedState:
-    pass
+    def __init__(self, computational_result):
+        self.computational_result = computational_result
+
+
+class BoardBefore:
+    def __int__(self, board):
+        self.set_board(board)
+
+    def get_board(self):
+        return self.__board
+
+    def set_board(self, board):
+        self.board = board
 
 
 GenMove = Callable[[np.ndarray, BoardPiece, Optional[SavedState]],  # Arguments for the generate_move function
@@ -132,12 +145,21 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     """
     if copy:
         board_before = board.copy()
+        set_board_before(board_before)
     for i in range(board.shape[0]):
         if board[i, action] == NO_PLAYER:
             board[i, action] = player
             break
     return board
 
+
+def set_board_before(board: np.ndarray):
+    global BOARD_BEFORE
+    BOARD_BEFORE = board
+
+
+def get_board_before() -> np.ndarray:
+    return BOARD_BEFORE
 
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
