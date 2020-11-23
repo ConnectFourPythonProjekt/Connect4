@@ -10,6 +10,7 @@ PLAYER2 = BoardPiece(2)  # board[i, j] == PLAYER2 where player 2 has a piece
 
 PlayerAction = np.int8  # The column to be played
 BOARD_BEFORE = np.ndarray
+LastOnTurn = BoardPiece(0)
 
 
 class GameState(Enum):
@@ -21,17 +22,6 @@ class GameState(Enum):
 class SavedState:
     def __init__(self, computational_result):
         self.computational_result = computational_result
-
-
-class BoardBefore:
-    def __int__(self, board):
-        self.set_board(board)
-
-    def get_board(self):
-        return self.__board
-
-    def set_board(self, board):
-        self.board = board
 
 
 GenMove = Callable[[np.ndarray, BoardPiece, Optional[SavedState]],  # Arguments for the generate_move function
@@ -80,7 +70,7 @@ def pretty_print_board(board: np.ndarray) -> str:
     EndStr = '|==============|\n|0 1 2 3 4 5 6 |'
     # iteration through the board and string construction
     for row in range(6):
-        tmpString = '|'     # begin of the row
+        tmpString = '|'  # begin of the row
         for cell in range(7):
             if board[row, cell] == PLAYER1:
                 tmpString += 'X '
@@ -88,7 +78,7 @@ def pretty_print_board(board: np.ndarray) -> str:
                 tmpString += 'O '
             else:
                 tmpString += '  '
-        tmpString += '|'        # end of the row
+        tmpString += '|'  # end of the row
         EndStr = tmpString + '\n' + EndStr  # works as the stack principle and pushes the next row
 
     return '|==============|\n' + EndStr
@@ -112,10 +102,10 @@ def string_to_board(pp_board: str) -> np.ndarray:
     splitStr.pop(8)  # | pops the rows where there is
     splitStr.pop(7)  # | |==============| or
     splitStr.pop(0)  # | |0 1 2 3 4 5 6 |
-    for row in range(5,-1,-1):
+    for row in range(5, -1, -1):
         rowStr = splitStr.pop(0)
         tmpRow = []  # stores the string characters converted to board pieces
-        for cell in range(1, 15, 2):    # index 0 of each substring is | and every cell contains board piece and a space
+        for cell in range(1, 15, 2):  # index 0 of each substring is | and every cell contains board piece and a space
             if rowStr[cell] == 'O':
                 tmpRow.append(PLAYER2)
             elif rowStr[cell] == 'X':
@@ -150,6 +140,11 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
         if board[i, action] == NO_PLAYER:
             board[i, action] = player
             break
+    global LastOnTurn
+    if player == BoardPiece(1):
+        LastOnTurn = BoardPiece(1)
+    else:
+        LastOnTurn = BoardPiece(2)
     return board
 
 
@@ -160,6 +155,7 @@ def set_board_before(board: np.ndarray):
 
 def get_board_before() -> np.ndarray:
     return BOARD_BEFORE
+
 
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
@@ -189,7 +185,7 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
 
     # finds free row in this column
     row = len(np.argwhere(board[:, last_action] == 0))  # counts zeros in column
-    row = board.shape[0] - row - 1      # the row of the last action
+    row = board.shape[0] - row - 1  # the row of the last action
 
     # checks horizontal
     BoardRow = board[row, 0:7].T  # gets whole row of last action
@@ -257,3 +253,11 @@ def check_end_state(board: np.ndarray, player: BoardPiece, last_action: Optional
     elif np.count_nonzero(board == 0) < 1:
         return GameState.IS_DRAW
     return GameState.STILL_PLAYING
+
+
+def on_turn() -> BoardPiece:
+    global LastOnTurn
+    if LastOnTurn == BoardPiece(1):
+        return BoardPiece(2)
+    else:
+        return BoardPiece(1)

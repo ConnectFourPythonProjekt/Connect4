@@ -7,11 +7,20 @@ from dataclasses import dataclass
 from agents.common import GameState
 from typing import Optional, List
 from enum import Enum
+from typing import Optional, Callable, Tuple
 
 DEPTH = 4
 ROW = 6
 COL = 7
 PLAYER_ON_TURN = BoardPiece
+SavedValue = np.zeros(7)
+
+
+def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[PlayerAction, Optional[SavedState]]:
+    value = alpha_beta_action(board, player)
+    action = np.where(SavedValue == value)[0][0]
+    print(action)
+    return action,saved_state
 
 
 def alpha_beta_action(board: np.ndarray, player: BoardPiece):
@@ -20,7 +29,7 @@ def alpha_beta_action(board: np.ndarray, player: BoardPiece):
     """
     global PLAYER_ON_TURN
     PLAYER_ON_TURN = player
-    return alpha_beta_minimax(board, player, math.inf, -math.inf, DEPTH)
+    return alpha_beta_minimax(board, player, -math.inf, math.inf, DEPTH)
 
 
 def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int):
@@ -38,30 +47,28 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
         return evaluate_curr_board(board, player)
 
-    save_value = []
-    global PLAYER_ON_TURN
-    if PLAYER_ON_TURN == player:
+    if common.on_turn() == player:
         tmp_board = board.copy()
+        global SavedValue
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player)
-                PLAYER_ON_TURN = player2
+                if depth == 4:
+                    SavedValue[col] = alpha
                 value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = tmp_board.copy()
+
                 if value > alpha:
                     alpha = value
                     if alpha >= beta:
                         break
-        if depth == 3:
-            save_value[col] = alpha
         return alpha
     else:
         tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player2)
-                PLAYER_ON_TURN = player
-                value = alpha_beta_minimax(after_action, player2, alpha, beta, depth - 1)
+                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = tmp_board.copy()
                 if value < beta:
                     beta = value
@@ -76,28 +83,24 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     """
     value_row_list = []
     for row in range(ROW):
-        if np.count_nonzero(board[row, :] == 0) != 0:
-            value_row_list.append(evaluate_position(board[row, :], player))
+        value_row_list.append(evaluate_position(board[row, :], player))
     value_row = np.max(value_row_list)
 
     value_col_list = []
     for col in range(COL):
-        if np.count_nonzero(board[:, col] == 0) != 0:
-            value_col_list.append(evaluate_position(board[:, col].T, player))
+        value_col_list.append(evaluate_position(board[:, col].T, player))
     value_col = np.max(value_col_list)
 
     value_main_diag_list = []
     for diag in range(-2, 4):
         main_diag = np.diag(board, diag)
-        if np.count_nonzero(main_diag == 0) != 0:
-            value_main_diag_list.append(evaluate_position(main_diag, player))
+        value_main_diag_list.append(evaluate_position(main_diag, player))
     value_main_diag = np.max(value_main_diag_list)
 
     value_opp_diag_list = []
     for diag in range(-2, 4):
         opp_diag = np.diag(board[::-1], diag)
-        if np.count_nonzero(opp_diag == 0) != 0:
-            value_opp_diag_list.append(evaluate_position(opp_diag, player))
+        value_opp_diag_list.append(evaluate_position(opp_diag, player))
     value_opp_diag = np.max(value_opp_diag_list)
 
     return max(value_col, value_row, value_main_diag, value_opp_diag)
