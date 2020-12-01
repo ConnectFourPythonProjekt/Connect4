@@ -9,7 +9,9 @@ from typing import Optional, List
 from enum import Enum
 from typing import Optional, Callable, Tuple
 
-DEPTH = 4
+# chetno = greshno pri player2 - player (51 red)
+# raboti za depth 2 pri player - player2 (51 red)
+DEPTH = 1
 ROW = 6
 COL = 7
 PLAYER_ON_TURN = BoardPiece
@@ -18,9 +20,9 @@ SavedValue = np.zeros(7)
 
 def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[PlayerAction, Optional[SavedState]]:
     value = alpha_beta_action(board, player)
+    print(value)
     action = np.where(SavedValue == value)[0][0]
-    print(action)
-    return action,saved_state
+    return action, saved_state
 
 
 def alpha_beta_action(board: np.ndarray, player: BoardPiece):
@@ -45,31 +47,34 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     if (depth == 0 or
             game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
-        return evaluate_curr_board(board, player)
+        return (depth + 5) * evaluate_curr_board(board, player2) - (depth + 5) * evaluate_curr_board(board, player)
 
     if common.on_turn() == player:
-        tmp_board = board.copy()
         global SavedValue
+        tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
-                after_action = common.apply_player_action(board, col, player)
-                if depth == 4:
-                    SavedValue[col] = alpha
-                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
-                board = tmp_board.copy()
-
+                after_action = common.apply_player_action(board, col, player, True)
+                value = alpha_beta_minimax(after_action, player2, alpha, beta, depth - 1)
+                board = common.undo_move()
+                if depth == DEPTH:
+                    SavedValue[col] = value
+                    board = tmp_board.copy()
+                    print(SavedValue)
                 if value > alpha:
                     alpha = value
                     if alpha >= beta:
                         break
         return alpha
+
     else:
-        tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
-                after_action = common.apply_player_action(board, col, player2)
+                # player
+                after_action = common.apply_player_action(board, col, player2, True)
+                # player 2
                 value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
-                board = tmp_board.copy()
+                board = common.undo_move()
                 if value < beta:
                     beta = value
                     if alpha >= beta:
@@ -113,18 +118,23 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
 
     index = len(array_from_board) - 3
 
-    list_of_values = []
+    player2 = 0
+    if player == BoardPiece(1):
+        player2 = BoardPiece(2)
+    else:
+        player2 = BoardPiece(1)
+
+    sum_val = 0
     for i in range(index):
         tmp = array_from_board[i:i + 4]
         if np.count_nonzero(tmp == player) == 4:
-            list_of_values.append(64)
+            sum_val += 164
+        if np.count_nonzero(tmp == player2) == 3 and np.count_nonzero(tmp == player) == 1:
+            sum_val += 80
         if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
-            list_of_values.append(27)
+            sum_val += 40
         if np.count_nonzero(tmp == player) == 2 and np.count_nonzero(tmp == BoardPiece(0)) == 2:
-            list_of_values.append(8)
+            sum_val += 20
         if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
-            list_of_values.append(1)
-    if len(list_of_values) == 0:
-        return 0
-    else:
-        return np.max(list_of_values)
+            sum_val += 1
+    return sum_val

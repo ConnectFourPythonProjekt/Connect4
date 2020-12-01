@@ -157,6 +157,14 @@ def get_board_before() -> np.ndarray:
     return BOARD_BEFORE
 
 
+def undo_move():
+    global LastOnTurn
+    if LastOnTurn == BoardPiece(2):
+        LastOnTurn = BoardPiece(1)
+    else:
+        LastOnTurn = BoardPiece(2)
+    return get_board_before()
+
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
     Returns True if there are four adjacent pieces equal to `player` arranged
