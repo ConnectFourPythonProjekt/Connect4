@@ -11,18 +11,19 @@ from typing import Optional, Callable, Tuple
 
 # chetno = greshno pri player2 - player (51 red)
 # raboti za depth 2 pri player - player2 (51 red)
-DEPTH = 4
+DEPTH = 1
 ROW = 6
 COL = 7
 PLAYER_ON_TURN = BoardPiece
 SavedValue = np.zeros(7)
 
 
-def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[PlayerAction, Optional[SavedState]]:
+def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
+    PlayerAction, Optional[SavedState]]:
     value = alpha_beta_action(board, player)
     action = np.where(SavedValue == value)[0][0]
     print(action)
-    return action,saved_state
+    return action, saved_state
 
 
 def alpha_beta_action(board: np.ndarray, player: BoardPiece):
@@ -47,9 +48,8 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     if (depth == 0 or
             game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
-        if DEPTH == 1:
-            return (depth + 1) * evaluate_curr_board(board, player)
-        else : return (depth + 1) * evaluate_curr_board(board, player) + (depth + 1) * evaluate_curr_board(board, player2)
+
+        return (depth + 1) * evaluate_curr_board(board, player) + (depth + 1) * evaluate_curr_board(board, player2)
 
     if common.on_turn() == player:
         global SavedValue
@@ -72,9 +72,7 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     else:
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
-                # player
                 after_action = common.apply_player_action(board, col, player2, True)
-                # player 2
                 value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = common.undo_move()
                 if value < beta:
@@ -120,16 +118,27 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
 
     index = len(array_from_board) - 3
 
-
     sum_val = 0
     for i in range(index):
         tmp = array_from_board[i:i + 4]
         if np.count_nonzero(tmp == player) == 4:
-            sum_val += 164
+            sum_val += 10000
         if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
-            sum_val += 40
+            sum_val += 1000
         if np.count_nonzero(tmp == player) == 2 and np.count_nonzero(tmp == BoardPiece(0)) == 2:
-            sum_val += 20
+            sum_val += 100
         if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
             sum_val += 1
     return sum_val
+
+def block(board: np.ndarray, player: BoardPiece) -> bool:
+
+    player2 = 0
+    if player == BoardPiece(1):
+        player2 = BoardPiece(2)
+    else:
+        player2 = BoardPiece(1)
+    if evaluate_curr_board(board,player2) > 1000: return True
+    return False
+
+
