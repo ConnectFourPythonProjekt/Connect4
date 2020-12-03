@@ -16,7 +16,7 @@ SavedValue = np.zeros(7)  # list with compute values for every column
 def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
     PlayerAction, Optional[SavedState]]:
     """
-       Choose a move based on alpha-beta/negamax
+       Choose a move based on alpha-beta minimax
 
        Arguments:
        board: ndarray representation of the board
