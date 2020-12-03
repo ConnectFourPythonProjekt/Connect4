@@ -150,15 +150,42 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
 
 
 def set_board_before(board: np.ndarray):
+    """
+            Setter for the board
+
+            Arguments:
+                board: ndarray representation of the board
+
+            Return:
+                ---
+            """
     global BOARD_BEFORE
     BOARD_BEFORE = board
 
 
 def get_board_before() -> np.ndarray:
+    """
+            Getter for the board
+
+            Arguments:
+             ---
+
+            Return:
+            ndarray: representation of the board
+    """
     return BOARD_BEFORE
 
 
 def undo_move():
+    """
+        The function changes the player's turn if the move is undone.
+
+        Arguments:
+            ---
+
+        Return:
+            np.ndarray: representation of the board after a move has been undone
+        """
     global LastOnTurn
     if LastOnTurn == BoardPiece(2):
         LastOnTurn = BoardPiece(1)
@@ -265,6 +292,15 @@ def check_end_state(board: np.ndarray, player: BoardPiece, last_action: Optional
 
 
 def on_turn() -> BoardPiece:
+    """
+        The function returns the player who is on turn
+
+        Arguments:
+            ---
+
+        Return:
+            BoardPiece: the player, whose turn it is
+        """
     global LastOnTurn
     if LastOnTurn == BoardPiece(1):
         return BoardPiece(2)
