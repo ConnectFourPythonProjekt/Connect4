@@ -76,12 +76,13 @@ if __name__ == '__main__':
     # human_vs_agent(minimax_gen_move)
     # human_vs_agent(alpha_beta_action)
     board = np.zeros((6, 7))
-    board[0, 0:7] = [1, 1, 1, 0, 0, 2, 1]
-    board[1, 0:7] = [1, 0, 2, 0, 0, 2, 1]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 1, 0]
+    board[0, 0:7] = [2, 1, 1, 2, 1, 2, 2]
+    board[1, 0:7] = [1, 1, 0, 1, 0, 2, 1]
+    board[2, 0:7] = [0, 0, 0, 1, 0, 2, 1]
     board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+
 
     # print(minimax.where_are_my_pieces(board, 2))
     # print(common.pretty_print_board(board))

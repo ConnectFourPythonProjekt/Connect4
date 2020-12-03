@@ -11,7 +11,7 @@ from typing import Optional, Callable, Tuple
 
 # chetno = greshno pri player2 - player (51 red)
 # raboti za depth 2 pri player - player2 (51 red)
-DEPTH = 1
+DEPTH = 4
 ROW = 6
 COL = 7
 PLAYER_ON_TURN = BoardPiece
@@ -48,11 +48,19 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     if (depth == 0 or
             game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
+        return (depth + 1) * evaluate_curr_board(board, player) - (depth + 1) * evaluate_curr_board(board, player2)
 
-        return (depth + 1) * evaluate_curr_board(board, player) + (depth + 1) * evaluate_curr_board(board, player2)
+    global SavedValue
+    board_before = board.copy()
+    if block(board, player) > -1 and depth > 0:
+        board = board_before.copy()
+        if depth == DEPTH:
+            # if you have to block the opponent on the first move
+            SavedValue[block(board, player)] = -(depth * 100000000)
+        return -(depth * 100000000)
 
     if common.on_turn() == player:
-        global SavedValue
+        # global SavedValue
         tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
@@ -73,7 +81,7 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player2, True)
-                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
+                value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = common.undo_move()
                 if value < beta:
                     beta = value
@@ -122,7 +130,7 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     for i in range(index):
         tmp = array_from_board[i:i + 4]
         if np.count_nonzero(tmp == player) == 4:
-            sum_val += 10000
+            sum_val += 100000
         if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
             sum_val += 1000
         if np.count_nonzero(tmp == player) == 2 and np.count_nonzero(tmp == BoardPiece(0)) == 2:
@@ -131,14 +139,20 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
             sum_val += 1
     return sum_val
 
-def block(board: np.ndarray, player: BoardPiece) -> bool:
 
+def block(board: np.ndarray, player: BoardPiece) -> int:
     player2 = 0
     if player == BoardPiece(1):
         player2 = BoardPiece(2)
     else:
         player2 = BoardPiece(1)
-    if evaluate_curr_board(board,player2) > 1000: return True
-    return False
+    if evaluate_curr_board(board, player2) > 1000:
+        for col in range(COL):
+            tmp_board = board.copy()
+            board_with_move = common.apply_player_action(board, col, player2, True)
+            if common.check_end_state(board_with_move, player2, col) == GameState.IS_WIN:
+                board = tmp_board.copy()
+                return col
+            board = tmp_board.copy()
 
-
+    return -1
