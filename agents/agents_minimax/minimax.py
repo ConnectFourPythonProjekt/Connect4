@@ -52,6 +52,12 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
 
     global SavedValue
     board_before = board.copy()
+    if block(board, player2) > -1:
+        board= board_before.copy()
+        if depth == DEPTH:
+            SavedValue[block(board, player2)] = depth * 100000000
+        return depth * 100000000
+
     if block(board, player) > -1 and depth > 0:
         board = board_before.copy()
         if depth == DEPTH:
