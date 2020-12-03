@@ -34,15 +34,15 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
 
 def alpha_beta_action(board: np.ndarray, player: BoardPiece):
     """
-    Computes where the player has to play
+       Main call function calling minimax alpha beta pruning
 
-    Arguments:
-       board: ndarray representation of the board
-       player: whether agent plays with X (Player1) or O (Player2)
+        Arguments:
+            board: ndarray representation of the board
+            player: the agent to be maximized
+        Return:
+            int: the final value
 
-    Return:
-        int: return the best value
-    """
+        """
     # sets current player on turn
     global PLAYER_ON_TURN
     PLAYER_ON_TURN = player
@@ -51,7 +51,15 @@ def alpha_beta_action(board: np.ndarray, player: BoardPiece):
 
 def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int):
     """
-    Alpha-beta pruning/Negamax. Called by alpha_beta_action
+    Recursive Alpha-beta pruning,minimax. Called by alpha_beta_action.
+    Arguments:
+            board: ndarray representation of the board
+            player: the player or the opponent to be mini/maximized
+            alpha: value set to -infinity
+            beta: value set to infinity
+            depth: evaluate the game tree down to some fixed depth
+        Return:
+            int: the final value for the evaluation
     """
 
     # define the opponent
@@ -105,8 +113,8 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     else:
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
-                after_action = common.apply_player_action(board, col, player2, True)  # do move with opponent
-                value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)  # recursively evaluate board
+                after_action = common.apply_player_action(board, col, player2, True)
+                value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = common.undo_move()
                 if value < beta:
                     beta = value
@@ -117,8 +125,15 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
 
 def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     """
+           The function evaluates the board for the current player. Called by alpha_beta_minimax.
 
-    """
+            Arguments:
+                board: ndarray representation of the board
+                player: the player whose moves have to be evaluated
+            Return:
+                int: sum of the evaluated values for each the column/row and diagonal
+
+            """
 
     # evaluate every row of the board
     value_row_list = []  # list with compute values for each row
@@ -137,22 +152,29 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     for diag in range(-2, 4):
         main_diag = np.diag(board, diag)
         value_main_diag_list.append(evaluate_position(main_diag, player))
-    value_main_diag = np.sum(value_main_diag_list)  # sums the values for the all diagonals
+    value_main_diag = np.sum(value_main_diag_list)
 
-    # evaluate every (left bottom, right top) diagonal of the board
-    value_opp_diag_list = []  # list with compute values for each (left bottom, right top) diagonal
+    value_opp_diag_list = []
     for diag in range(-2, 4):
         opp_diag = np.diag(board[::-1], diag)
         value_opp_diag_list.append(evaluate_position(opp_diag, player))
-    value_opp_diag = np.sum(value_opp_diag_list)  # sums the values for the all diagonals
+    value_opp_diag = np.sum(value_opp_diag_list)
 
-    return value_col + value_row + value_main_diag + value_opp_diag  # return score of the current board
+    return value_col + value_row + value_main_diag + value_opp_diag
 
 
 def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     """
-    Returns evaluation of current row for the player
-    """
+        This function calculates the heuristic value of the node.
+        Called by evaluate_curr_board and block.
+
+        Arguments:
+            array_from_board: ndarray that represents specific column/diagonal/row of the board
+            player: the player whose moves have to be evaluated
+        Return:
+            int: sum of the evaluated values for each subarray of array_from_board
+
+        """
     # how many 4 sequences are in the array
     index = len(array_from_board) - 3
 
@@ -175,6 +197,17 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
 
 
 def block(board: np.ndarray, player: BoardPiece) -> int:
+    """
+           The function checks if the opponent of player can win in only one move.
+           Called by alpha_beta_minimax
+
+           Arguments:
+           board: ndarray representation of the board
+           player: the current player
+           Return:
+           int: -1 if the opponent can't win in only one move or the column where the opponent is going to win
+
+               """
     # sets the opponent
     player2 = 0
     if player == BoardPiece(1):

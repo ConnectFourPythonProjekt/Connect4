@@ -73,14 +73,38 @@ def human_vs_agent(
 
 
 if __name__ == '__main__':
-    human_vs_agent(minimax_gen_move)
-    # board = np.zeros((6, 7))
-    # board[0, 0:7] = [1, 2, 1, 2, 1, 1, 2]
-    # board[1, 0:7] = [1, 2, 0, 2, 0, 0, 2]
-    # board[2, 0:7] = [1, 0, 0, 0, 0, 0, 1]
-    # board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # print(common.pretty_print_board(board))
-    # print(minimax.generate_move_minimax(board,1, None))
+    # human_vs_agent(minimax_gen_move)
+    # human_vs_agent(alpha_beta_action)
+    board = np.zeros((6, 7))
+    board[0, 0:7] = [2, 1, 1, 2, 1, 2, 2]
+    board[1, 0:7] = [1, 1, 0, 1, 0, 2, 1]
+    board[2, 0:7] = [0, 0, 0, 1, 0, 2, 1]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
 
+
+    # print(minimax.where_are_my_pieces(board, 2))
+    # print(common.pretty_print_board(board))
+    # print(minimax.in_a_row(board[1, :],1))
+    # print(minimax.alpha_beta_action(board,1))
+    print(common.pretty_print_board(board))
+    # print(minimax.alpha_beta_action(board, 1))
+    print(minimax.generate_move_minimax(board,1, None))
+
+    # board_win1_hor = np.zeros((6, 7))
+    # board_win1_hor[0, 0:7] = [1, 2, 2, 1, 1, 2, 2]
+    # board_win1_hor[1, 0:7] = [2, 1, 2, 1, 2, 2, 1]
+    # board_win1_hor[2, 0:7] = [1, 2, 1, 1, 1, 1, 0]
+    # board_win1_hor[3, 0:7] = [1, 2, 2, 0, 0, 0, 0]
+    # board_win1_hor[4, 0:7] = [1, 1, 0, 0, 0, 0, 0]
+    # board_win1_hor[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    #
+    # board_win2_diagonal = np.zeros((6, 7))
+    # board_win2_diagonal[0, 0:7] = [1, 2, 2, 1, 1, 2, 2]
+    # board_win2_diagonal[1, 0:7] = [2, 1, 2, 1, 2, 2, 1]
+    # board_win2_diagonal[2, 0:7] = [1, 2, 1, 2, 0, 0, 0]
+    # board_win2_diagonal[3, 0:7] = [1, 2, 2, 0, 0, 0, 0]
+    # board_win2_diagonal[4, 0:7] = [1, 1, 0, 0, 0, 0, 0]
+    # board_win2_diagonal[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # print(common.connected_four(board,2))
