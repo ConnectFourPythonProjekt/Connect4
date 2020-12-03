@@ -140,6 +140,7 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
         if board[i, action] == NO_PLAYER:
             board[i, action] = player
             break
+
     global LastOnTurn
     if player == BoardPiece(1):
         LastOnTurn = BoardPiece(1)
