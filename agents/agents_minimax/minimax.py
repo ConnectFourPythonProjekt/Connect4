@@ -10,7 +10,7 @@ DEPTH = 4
 ROW = 6
 COL = 7
 PLAYER_ON_TURN = BoardPiece
-SavedValue = np.zeros(7)  # list with compute values for every column
+SavedValue = np.zeros(7)  # list with computed values for each column
 
 
 def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
@@ -28,7 +28,7 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
 
        """
     value = alpha_beta_action(board, player)  # compute alpha-beta value
-    action = np.where(SavedValue == value)[0][0]  # find in from which column comes the best value
+    action = np.where(SavedValue == value)[0][0]  # find the column comes the best value
     return action, saved_state
 
 
@@ -93,7 +93,7 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
         return -(depth * 100000000)
 
     # Alpha - Beta pruning
-    # maximizing
+    # maximizing the agent
     if common.on_turn() == player:
         tmp_board = board.copy()
         for col in range(COL):
@@ -104,18 +104,20 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
                 if depth == DEPTH:
                     SavedValue[col] = value  # saves values for child of root(first move)
                     board = tmp_board.copy()
+                # cut off
                 if value > alpha:
                     alpha = value
                     if alpha >= beta:
                         break
         return alpha
-    # minimizing
+    # minimizing the opponent
     else:
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player2, True)
                 value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = common.undo_move()
+                # cut off
                 if value < beta:
                     beta = value
                     if alpha >= beta:
@@ -136,29 +138,31 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
             """
 
     # evaluate every row of the board
-    value_row_list = []  # list with compute values for each row
+    value_row_list = []  # list with computed values for each row
     for row in range(ROW):
         value_row_list.append(evaluate_position(board[row, :], player))
-    value_row = np.sum(value_row_list)  # sums the values for the all 6 rows
+    value_row = np.sum(value_row_list)  # sums the evaluated values for the all 6 rows
 
     # evaluate every column of the board
     value_col_list = []  # list with compute values for each column
     for col in range(COL):
         value_col_list.append(evaluate_position(board[:, col].T, player))
-    value_col = np.sum(value_col_list)  # sums the values for the all 7 columns
+    value_col = np.sum(value_col_list)  # sums the evaluated values for the all 7 columns
 
     # evaluate every (left top, right bottom) diagonal of the board
     value_main_diag_list = []  # list with compute values for each (left top, right bottom) diagonal
     for diag in range(-2, 4):
         main_diag = np.diag(board, diag)
         value_main_diag_list.append(evaluate_position(main_diag, player))
+        # sums the evaluated values for each (left top, right bottom)) diagonal
     value_main_diag = np.sum(value_main_diag_list)
 
-    value_opp_diag_list = []
+    # evaluate every (right top, left bottom) diagonal of the board
+    value_opp_diag_list = []  # list with compute values for each (right top, left bottom) diagonal
     for diag in range(-2, 4):
         opp_diag = np.diag(board[::-1], diag)
         value_opp_diag_list.append(evaluate_position(opp_diag, player))
-    value_opp_diag = np.sum(value_opp_diag_list)
+    value_opp_diag = np.sum(value_opp_diag_list)  # sums the evaluated values for each (right top, left bottom) diagonal
 
     return value_col + value_row + value_main_diag + value_opp_diag
 
@@ -175,22 +179,22 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
             int: sum of the evaluated values for each subarray of array_from_board
 
         """
-    # how many 4 sequences are in the array
+    # how many sequences of length 4 does the array contain
     index = len(array_from_board) - 3
 
-    sum_val = 0  # score of the current array
+    sum_val = 0  # value of the current array
     for i in range(index):
         tmp = array_from_board[i:i + 4]
         # when there is a win
         if np.count_nonzero(tmp == player) == 4:
             sum_val += 100000
-        # when there are 3 pieces with space between
+        # when there are 3 pieces and space in between
         if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
             sum_val += 1000
-        # when there are 2 pieces with space between
+        # when there are 2 pieces and two spaces in between
         if np.count_nonzero(tmp == player) == 2 and np.count_nonzero(tmp == BoardPiece(0)) == 2:
             sum_val += 100
-        # when there is 1 piece with space between
+        # when there is 1 piece and three spaces
         if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
             sum_val += 1
     return sum_val
@@ -214,13 +218,13 @@ def block(board: np.ndarray, player: BoardPiece) -> int:
         player2 = BoardPiece(2)
     else:
         player2 = BoardPiece(1)
-    # checks if opponent has 3 pieces with space between
+    # checks if opponent has 3 pieces with space in between
     if evaluate_curr_board(board, player2) > 1000:
         # find where opponent can make win
         for col in range(COL):
             tmp_board = board.copy()
             board_with_move = common.apply_player_action(board, col, player2, True)
-            # when opponent wins return the column where the opponent is going to win
+            # if opponent wins return the column where the opponent is going to win
             if common.check_end_state(board_with_move, player2, col) == GameState.IS_WIN:
                 board = tmp_board.copy()
                 return col
