@@ -1,5 +1,5 @@
 from agents.agents_minimax.minimax import generate_move_minimax
-from agents.common import apply_player_action, initialize_game_state, BoardPiece
+from agents.common import apply_player_action, initialize_game_state, BoardPiece,pretty_print_board
 
 
 def test_generate_move_minimax():
@@ -24,6 +24,7 @@ def test_generate_move_minimax():
     apply_player_action(board1, 3, BoardPiece(2), False)
     apply_player_action(board1, 0, BoardPiece(1), False)
     apply_player_action(board1, 3, BoardPiece(2), False)
+
     action1, save_state = generate_move_minimax(board1, BoardPiece(1), None)
     assert action1 == 3
 

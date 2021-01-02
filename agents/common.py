@@ -193,6 +193,7 @@ def undo_move():
         LastOnTurn = BoardPiece(2)
     return get_board_before()
 
+
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
     """
     Returns True if there are four adjacent pieces equal to `player` arranged
