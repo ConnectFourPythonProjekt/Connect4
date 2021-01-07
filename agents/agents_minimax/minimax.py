@@ -13,6 +13,7 @@ PLAYER_ON_TURN = BoardPiece
 SavedValue = np.zeros(7)  # list with computed values for each column
 
 
+
 def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
     PlayerAction, Optional[SavedState]]:
     """
@@ -27,7 +28,8 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
            Tuple[PlayerAction, SavedState]: returns the column, where the agent will play and agent computations
 
        """
-    value = alpha_beta_action(board, player)  # compute alpha-beta value
+    board_copy = board.copy()
+    value = alpha_beta_action(board_copy, player)  # compute alpha-beta value
     action = np.where(SavedValue == value)[0][0]  # find the column comes the best value
     return action, saved_state
 
@@ -46,7 +48,10 @@ def alpha_beta_action(board: np.ndarray, player: BoardPiece):
     # sets current player on turn
     global PLAYER_ON_TURN
     PLAYER_ON_TURN = player
-    return alpha_beta_minimax(board, player, -math.inf, math.inf, DEPTH)
+    board_before = board.copy()
+    action = alpha_beta_minimax(board, player, -math.inf, math.inf, DEPTH)
+    board = board_before.copy()
+    return action
 
 
 def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int):
@@ -103,20 +108,24 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
                 board = common.undo_move()
                 if depth == DEPTH:
                     SavedValue[col] = value  # saves values for child of root(first move)
-                    board = tmp_board.copy()
+                board = tmp_board.copy()
                 # cut off
                 if value > alpha:
                     alpha = value
                     if alpha >= beta:
                         break
+            else:
+                SavedValue[col] = None
         return alpha
     # minimizing the opponent
     else:
         for col in range(COL):
+            tmp_board = board.copy()
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player2, True)
                 value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
                 board = common.undo_move()
+                board = tmp_board.copy()
                 # cut off
                 if value < beta:
                     beta = value
