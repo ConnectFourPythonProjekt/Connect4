@@ -30,23 +30,33 @@ def test_generate_move_minimax():
 
     # with alpha-betta
     board2 = initialize_game_state()
-    board2[0, 0:7] = [2, 1, 1, 2, 1, 2, 2]
-    board2[1, 0:7] = [1, 2, 0, 1, 0, 2, 1]
-    board2[2, 0:7] = [0, 0, 0, 2, 0, 1, 1]
-    board2[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board2[0, 0:7] = [0, 1, 1, 2, 1, 0, 0]
+    board2[1, 0:7] = [0, 0, 0, 2, 0, 0, 0]
+    board2[2, 0:7] = [0, 0, 0, 1, 0, 0, 0]
+    board2[3, 0:7] = [0, 0, 0, 2, 0, 0, 0]
     board2[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board2[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
 
     action2, save_state = generate_move_minimax(board2, BoardPiece(1), None)
-    assert action2 == 6
+    assert action2 == 2
 
     board3 = initialize_game_state()
-    board3[0, 0:7] = [1, 2, 1, 1, 2, 2, 0]
-    board3[1, 0:7] = [0, 0, 1, 1, 2, 0, 0]
-    board3[2, 0:7] = [0, 0, 0, 2, 1, 0, 0]
+    board3[0, 0:7] = [1, 0, 2, 1, 2, 0, 1]
+    board3[1, 0:7] = [0, 0, 1, 2, 0, 0, 0]
+    board3[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board3[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board3[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board3[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
 
-    action3, save_state = generate_move_minimax(board3, BoardPiece(1), False)
-    assert action3 == 0
+    action3, save_state = generate_move_minimax(board3, BoardPiece(2), False)
+    assert action3 == 2
+
+    board4 = initialize_game_state()
+    board4[0, 0:7] = [1, 2, 2, 1, 1, 2, 2]
+    board4[1, 0:7] = [1, 2, 2, 2, 1, 1, 2]
+    board4[2, 0:7] = [2, 1, 1, 1, 2, 2, 1]
+    board4[3, 0:7] = [1, 1, 2, 1, 1, 2, 2]
+    board4[4, 0:7] = [2, 1, 2, 2, 1, 1, 1]
+    board4[5, 0:7] = [1, 2, 2, 1, 2, 0, 2]
+    action4, save_state = generate_move_minimax(board4, BoardPiece(2), False)
+    assert action4 == 5

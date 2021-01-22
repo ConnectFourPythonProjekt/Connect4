@@ -9,9 +9,6 @@ from typing import Optional, Tuple
 DEPTH = 4
 ROW = 6
 COL = 7
-PLAYER_ON_TURN = BoardPiece
-SavedValue = np.zeros(7)  # list with computed values for each column
-
 
 
 def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
@@ -29,32 +26,14 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
 
        """
     board_copy = board.copy()
-    value = alpha_beta_action(board_copy, player)  # compute alpha-beta value
+    # compute with alpha-beta next action
+    value, SavedValue = alpha_beta_minimax(board_copy, player, -math.inf, math.inf, DEPTH, True)
     action = np.where(SavedValue == value)[0][0]  # find the column comes the best value
     return action, saved_state
 
 
-def alpha_beta_action(board: np.ndarray, player: BoardPiece):
-    """
-       Main call function calling minimax alpha beta pruning
-
-        Arguments:
-            board: ndarray representation of the board
-            player: the agent to be maximized
-        Return:
-            int: the final value
-
-        """
-    # sets current player on turn
-    global PLAYER_ON_TURN
-    PLAYER_ON_TURN = player
-    board_before = board.copy()
-    action = alpha_beta_minimax(board, player, -math.inf, math.inf, DEPTH)
-    board = board_before.copy()
-    return action
-
-
-def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int):
+def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: int, depth: int, maximising: bool) \
+        -> Tuple[int, np.ndarray]:
     """
     Recursive Alpha-beta pruning,minimax. Called by alpha_beta_action.
     Arguments:
@@ -63,49 +42,33 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
             alpha: value set to -infinity
             beta: value set to infinity
             depth: evaluate the game tree down to some fixed depth
+            maximising: True, when agent is on turn(MAX), False when opponent is on turn(MIN)
         Return:
-            int: the final value for the evaluation
+            Tuple[int, SavedValue]: returns the best value and list with computed values for each column
     """
 
     # define the opponent
-    player2 = 0
+    opponent = 0
     if player == BoardPiece(1):
-        player2 = BoardPiece(2)
+        opponent = BoardPiece(2)
     else:
-        player2 = BoardPiece(1)
+        opponent = BoardPiece(1)
 
     # evaluate current board when all the moves are done or game is won by one of the players
     if (depth == 0 or
             game_state(board, BoardPiece(1)) != GameState.STILL_PLAYING or
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
-        return (depth + 1) * evaluate_curr_board(board, player) - (depth + 1) * evaluate_curr_board(board, player2)
+        return (depth + 1) * evaluate_curr_board(board, player) - (depth + 1) * evaluate_curr_board(board, opponent)
 
-    # checks for current player win
-    global SavedValue
-    board_before = board.copy()
-    if block(board, player2) > -1:
-        board = board_before.copy()
-        if depth == DEPTH:
-            SavedValue[block(board, player2)] = depth * 100000000  # if player can win on the first move
-        return depth * 100000000
-
-    # check for opponent win
-    if block(board, player) > -1 and depth > 0:
-        board = board_before.copy()
-        if depth == DEPTH:
-            # if you have to block the opponent on the first move
-            SavedValue[block(board, player)] = -(depth * 100000000)
-        return -(depth * 100000000)
-
+    SavedValue = np.zeros(7)   # list with computed values for each column
     # Alpha - Beta pruning
-    # maximizing the agent
-    if common.on_turn() == player:
+    # maximising the agent
+    if maximising:
         tmp_board = board.copy()
         for col in range(COL):
             if np.count_nonzero(board[:, col] == 0) > 0:
                 after_action = common.apply_player_action(board, col, player, True)  # do move with player
-                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)  # recursively evaluate board
-                board = common.undo_move()
+                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1, False)  # evaluate board
                 if depth == DEPTH:
                     SavedValue[col] = value  # saves values for child of root(first move)
                 board = tmp_board.copy()
@@ -115,16 +78,18 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
                     if alpha >= beta:
                         break
             else:
-                SavedValue[col] = None
-        return alpha
-    # minimizing the opponent
+                SavedValue[col] = None  # when the column is full
+        if depth == DEPTH:
+            return alpha, SavedValue    # final return
+        else:
+            return alpha
+    # minimising the opponent
     else:
+        tmp_board = board.copy()
         for col in range(COL):
-            tmp_board = board.copy()
             if np.count_nonzero(board[:, col] == 0) > 0:
-                after_action = common.apply_player_action(board, col, player2, True)
-                value = -alpha_beta_minimax(after_action, player, alpha, beta, depth - 1)
-                board = common.undo_move()
+                after_action = common.apply_player_action(board, col, opponent, True)
+                value = alpha_beta_minimax(after_action, player, alpha, beta, depth - 1, True)
                 board = tmp_board.copy()
                 # cut off
                 if value < beta:
@@ -145,6 +110,18 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
                 int: sum of the evaluated values for each the column/row and diagonal
 
             """
+    opponent = BoardPiece(0)
+    if player == BoardPiece(1):
+        opponent = BoardPiece(2)
+    else:
+        opponent = BoardPiece(1)
+
+    # when agent wins
+    if common.check_end_state(board, player) == GameState.IS_WIN:
+        return 110000
+    # when opponent wins
+    if common.check_end_state(board, opponent) == GameState.IS_WIN:
+        return -100000
 
     # evaluate every row of the board
     value_row_list = []  # list with computed values for each row
@@ -194,9 +171,6 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     sum_val = 0  # value of the current array
     for i in range(index):
         tmp = array_from_board[i:i + 4]
-        # when there is a win
-        if np.count_nonzero(tmp == player) == 4:
-            sum_val += 100000
         # when there are 3 pieces and space in between
         if np.count_nonzero(tmp == player) == 3 and np.count_nonzero(tmp == BoardPiece(0)) == 1:
             sum_val += 1000
@@ -207,36 +181,3 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
         if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
             sum_val += 1
     return sum_val
-
-
-def block(board: np.ndarray, player: BoardPiece) -> int:
-    """
-           The function checks if the opponent of player can win in only one move.
-           Called by alpha_beta_minimax
-
-           Arguments:
-           board: ndarray representation of the board
-           player: the current player
-           Return:
-           int: -1 if the opponent can't win in only one move or the column where the opponent is going to win
-
-               """
-    # sets the opponent
-    player2 = 0
-    if player == BoardPiece(1):
-        player2 = BoardPiece(2)
-    else:
-        player2 = BoardPiece(1)
-    # checks if opponent has 3 pieces with space in between
-    if evaluate_curr_board(board, player2) > 1000:
-        # find where opponent can make win
-        for col in range(COL):
-            tmp_board = board.copy()
-            board_with_move = common.apply_player_action(board, col, player2, True)
-            # if opponent wins return the column where the opponent is going to win
-            if common.check_end_state(board_with_move, player2, col) == GameState.IS_WIN:
-                board = tmp_board.copy()
-                return col
-            board = tmp_board.copy()
-
-    return -1

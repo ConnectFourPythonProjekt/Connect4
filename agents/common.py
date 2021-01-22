@@ -10,8 +10,6 @@ PLAYER2 = BoardPiece(2)  # board[i, j] == PLAYER2 where player 2 has a piece
 
 PlayerAction = np.int8  # The column to be played
 BOARD_BEFORE = np.ndarray
-LastOnTurn = BoardPiece(0)
-
 
 class GameState(Enum):
     IS_WIN = 1
@@ -141,11 +139,6 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
             board[i, action] = player
             break
 
-    global LastOnTurn
-    if player == BoardPiece(1):
-        LastOnTurn = BoardPiece(1)
-    else:
-        LastOnTurn = BoardPiece(2)
     return board
 
 
@@ -174,24 +167,6 @@ def get_board_before() -> np.ndarray:
             ndarray: representation of the board
     """
     return BOARD_BEFORE
-
-
-def undo_move():
-    """
-        The function changes the player's turn if the move is undone.
-
-        Arguments:
-            ---
-
-        Return:
-            np.ndarray: representation of the board after a move has been undone
-        """
-    global LastOnTurn
-    if LastOnTurn == BoardPiece(2):
-        LastOnTurn = BoardPiece(1)
-    else:
-        LastOnTurn = BoardPiece(2)
-    return get_board_before()
 
 
 def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None) -> bool:
@@ -267,6 +242,7 @@ def four_in_a_row(array: np.ndarray, player: BoardPiece) -> bool:
                 return True
         else:
             counter = 0
+
     return False
 
 
@@ -290,20 +266,3 @@ def check_end_state(board: np.ndarray, player: BoardPiece, last_action: Optional
     elif np.count_nonzero(board == 0) < 1:
         return GameState.IS_DRAW
     return GameState.STILL_PLAYING
-
-
-def on_turn() -> BoardPiece:
-    """
-        The function returns the player who is on turn
-
-        Arguments:
-            ---
-
-        Return:
-            BoardPiece: the player, whose turn it is
-        """
-    global LastOnTurn
-    if LastOnTurn == BoardPiece(1):
-        return BoardPiece(2)
-    else:
-        return BoardPiece(1)
