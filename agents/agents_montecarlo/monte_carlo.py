@@ -15,8 +15,13 @@ class Node():
         self.player = BoardPiece
 
     def add_node(self):
-        new_node = Node(parent=self)
+        new_node = Node(None, None, None, self)
         self.children.append(new_node)
+        new_node.parent = self
+        new_node.score = 0
+
+    def __repr__(self):
+        return f'Node(parent={self.parent}, move={self.move})'
 
 
 def upper_confidence_bound(current_node: Node) -> float:
