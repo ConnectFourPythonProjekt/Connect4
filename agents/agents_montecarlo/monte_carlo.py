@@ -46,6 +46,17 @@ def selection(root: Node):
     selection(best_node)
     expansion(best_node)
 
+    #
+    # best_score = np.zeros((len(root.children), 2), dtype=[('x', 'Node'), ('y', 'int')])
+    # for child in root.children:
+    #     child.score = upper_confidence_bound(child)
+    #     best_score[child][0] = child.score
+    #     best_score[child][1] = root.children[child]
+    # best_score.sort(order='y')
+    # best_score = np.flipud(best_score)
+    # best_node = best_score[0][0]
+    # expansion(best_node)
+
 
 def expansion(selected_node: Node) -> Node:
     """
@@ -59,7 +70,7 @@ def expansion(selected_node: Node) -> Node:
     simulation(child[0])
 
 
-def valid_moves(board) -> int:
+def valid_move(board) -> int:
     valid_moves = []  # list with columns, where it can be played
     for col in range(board.shape[1]):
         if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
@@ -86,14 +97,14 @@ def simulation(newly_created_node: Node):
            check_end_state(board, opponent) == GameState.STILL_PLAYING):
 
         if on_turn == newly_created_node.player:
-            move = valid_moves(board)
+            move = valid_move(board)
             apply_player_action(board, move, newly_created_node.player)
             if counter == 0:
                 newly_created_node.move = move
                 counter = 1
             on_turn = opponent
         else:
-            apply_player_action(board, valid_moves(board), opponent)
+            apply_player_action(board, valid_move(board), opponent)
             on_turn = newly_created_node.player
         if check_end_state(board,newly_created_node.player) == GameState.IS_WIN:
             newly_created_node.wins += 1
@@ -113,7 +124,7 @@ def backpropagation(newly_created_node: Node, winner : bool):
         parent.simulations += 1
         backpropagation(parent,winner)
     else:
-        
+        return
 
 
 

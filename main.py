@@ -73,8 +73,8 @@ def human_vs_agent(
 
 
 if __name__ == '__main__':
-    human_vs_agent(minimax_gen_move)
-    # board = np.zeros((6, 7))
+    # human_vs_agent(minimax_gen_move)
+    board = np.zeros((6, 7))
     # board[0, 0:7] = [1, 2, 1, 1, 2, 1, 0]
     # board[1, 0:7] = [0, 0, 0, 2, 0, 2, 0]
     # board[2, 0:7] = [0, 0, 0, 0, 0, 2, 0]
@@ -84,4 +84,14 @@ if __name__ == '__main__':
     # print(common.pretty_print_board(board))
     # print(minimax_gen_move(board, 1, False))
     # print(common.pretty_print_board(board))
-
+    # best_score = np.zeros(5, dtype=[('x', 'float'), ('y', 'int')])
+    # a = ["1", "2", "3", "4", "5"]
+    # b = [300, 13, 450, 24, 9]
+    # for sc in range(5):
+    #     best_score[sc][0] = a.pop()
+    #     best_score[sc][1] = b.pop()
+    # print(best_score)
+    # best_score.sort(order='y')
+    # best_score = np.flipud(best_score)
+    # print(best_score)
+    # print(best_score[0][0])
