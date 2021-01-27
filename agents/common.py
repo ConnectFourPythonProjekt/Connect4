@@ -30,10 +30,8 @@ GenMove = Callable[[np.ndarray, BoardPiece, Optional[SavedState]],  # Arguments 
 def initialize_game_state() -> np.ndarray:
     """
     Returns an ndarray, shape (6, 7) and data type (dtype) BoardPiece, initialized to 0 (NO_PLAYER).
-
     Arguments:
         ---
-
     Return:
         np.ndarray: initialized board, filled with zeros
     """
@@ -55,12 +53,9 @@ def pretty_print_board(board: np.ndarray) -> str:
     |  O O X X     |
     |==============|
     |0 1 2 3 4 5 6 |
-
     Player1 == X Player 2 == O
-
     Arguments:
         board: ndarray representation of the board
-
     Return:
         str: human readable string representation of the board
     """
@@ -85,12 +80,9 @@ def pretty_print_board(board: np.ndarray) -> str:
 def string_to_board(pp_board: str) -> np.ndarray:
     """
     Takes the output of pretty_print_board and turns it back into an ndarray.
-
     Player1 == X Player2 == O
-
     Arguments:
         pp_board: human readable string representation of the board
-
     Return:
         np.ndarray: ndarray representation of the board
     """
@@ -120,16 +112,13 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     """
     Sets board[i, action] = player, where i is the lowest open row. The modified
     board is returned. If copy is True, makes a copy of the board before modifying it.
-
     Arguments:
         board: ndarray representation of the board
         action: column, where the player wants to have a piece
         player: the player whose turn it is
         copy: board copy if needed
-
     Return:
         np.ndarray: ndarray representation of the board including the last action
-
     """
     if copy:
         board_before = board.copy()
@@ -145,10 +134,8 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
 def set_board_before(board: np.ndarray):
     """
             Setter for the board
-
             Arguments:
                 board: ndarray representation of the board
-
             Return:
                 ---
             """
@@ -159,10 +146,8 @@ def set_board_before(board: np.ndarray):
 def get_board_before() -> np.ndarray:
     """
             Getter for the board
-
             Arguments:
              ---
-
             Return:
             ndarray: representation of the board
     """
@@ -175,12 +160,10 @@ def connected_four(board: np.ndarray, player: BoardPiece, last_action: Optional[
     in either a horizontal, vertical, or diagonal line. Returns False otherwise.
     If desired, the last action taken (i.e. last column played) can be provided
     for potential speed optimisation.
-
     Arguments:
         board: ndarray representation of the board
         player: a player whose victory is being checked
         last_action: column, where the last action was
-
     Return:
         bool: True, when current player wins, False, when game isn't won by player
     """
@@ -226,11 +209,9 @@ def four_in_a_row(array: np.ndarray, player: BoardPiece) -> bool:
     """
         Counts how many adjacent pieces equal to `player` does the vertical/horizontal/diagonal contains.
         If they are four returns True, otherwise False.
-
         Arguments:
             array: ndarray to be checked if contains four adjacent pieces equal to `player`
             player: a player whose victory is being checked
-
         Return:
             bool: True, when current player wins, False, when game isn't won by player
         """
@@ -251,12 +232,10 @@ def check_end_state(board: np.ndarray, player: BoardPiece, last_action: Optional
     Returns the current game state for the current `player`, i.e. has their last
     action won (GameState.IS_WIN) or drawn (GameState.IS_DRAW) the game,
     or is play still on-going (GameState.STILL_PLAYING)?
-
      Arguments:
         board: ndarray representation of the board
         player: a player whose victory is being checked
         last_action: column, where the last action was
-
     Return:
         GameState: current game state
     """

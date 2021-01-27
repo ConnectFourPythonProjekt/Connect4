@@ -15,15 +15,12 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
     PlayerAction, Optional[SavedState]]:
     """
        Choose a move based on alpha-beta minimax
-
        Arguments:
        board: ndarray representation of the board
        player: whether agent plays with X (Player1) or O (Player2)
        saved_state: computation that it could reuse for future moves
-
        Return:
            Tuple[PlayerAction, SavedState]: returns the column, where the agent will play and agent computations
-
        """
     board_copy = board.copy()
     # compute with alpha-beta next action
@@ -102,13 +99,11 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
 def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
     """
            The function evaluates the board for the current player. Called by alpha_beta_minimax.
-
             Arguments:
                 board: ndarray representation of the board
                 player: the player whose moves have to be evaluated
             Return:
                 int: sum of the evaluated values for each the column/row and diagonal
-
             """
     opponent = BoardPiece(0)
     if player == BoardPiece(1):
@@ -157,13 +152,11 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     """
         This function calculates the heuristic value of the node.
         Called by evaluate_curr_board and block.
-
         Arguments:
             array_from_board: ndarray that represents specific column/diagonal/row of the board
             player: the player whose moves have to be evaluated
         Return:
             int: sum of the evaluated values for each subarray of array_from_board
-
         """
     # how many sequences of length 4 does the array contain
     index = len(array_from_board) - 3
