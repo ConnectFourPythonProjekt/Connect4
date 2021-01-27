@@ -31,12 +31,8 @@ def test_add_node():
     root = Node(12, board)
     root.add_node()
     child = root.children[0]
-    f = 4
-
-
-
-    # assert root.children.pop(0) == child
-    # assert child.parent == root
+    assert child.parent == root
+    assert root.children[0] == child
 
 
 
