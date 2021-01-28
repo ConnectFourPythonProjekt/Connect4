@@ -29,8 +29,8 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
     PlayerAction, Optional[SavedState]]:
     root = Node(board_state=board, player=player)
     # MCTR
-    selection(root)
-    move = choose_move(root)
+    move = selection(root,board,player)
+    # move = choose_move(root)
 
     return move, saved_state
 
@@ -58,13 +58,13 @@ def upper_confidence_bound(current_node: Node) -> float:
     return (w / s) + c * (np.sqrt((np.log(sp)) / s))
 
 
-def selection(node: Node):
+def selection(node: Node, board: np.ndarray, player: BoardPiece):
     """
     Returns the node that has the highest possibility of winning (UCB1)
     """
     best_score = [[], []]
     if not node.children:
-        expansion(node)
+        expansion(node,board,player)
     for child in node.children:
         child.score = upper_confidence_bound(child)
         best_score[0].append(child.score)
@@ -73,10 +73,11 @@ def selection(node: Node):
     max_score_index = best_score[0].index(max_score)
     best_node = best_score[1][max_score_index]
 
-    selection(best_node)
-    expansion(best_node)
+    selection(best_node, board,player)
+    # expansion(best_node, board,player)
 
-def expansion(selected_node: Node):
+
+def expansion(selected_node: Node, board: np.ndarray, player: BoardPiece):
     """
     The function expands the selected node and creates many children nodes.
     Returns the tree with the newly created node
@@ -85,15 +86,16 @@ def expansion(selected_node: Node):
     """
     selected_node.add_node()
     child = selected_node.children
-    simulation(child[0])
+    simulation(child[0], board,player)
 
-def simulation(newly_created_node: Node):
+def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece):
     """
     Recursivly called until the game is finished and a winner emerges
     updates the score of the new node
     """
-    on_turn = newly_created_node.player
-    board = newly_created_node.board_state
+    on_turn = player
+    # board = newly_created_node.board_state
+    newly_created_node.player = player
 
     if newly_created_node.player == BoardPiece(1):
         opponent = BoardPiece(2)
@@ -113,15 +115,15 @@ def simulation(newly_created_node: Node):
             on_turn = newly_created_node.player
         # game ends
         if check_end_state(board, newly_created_node.player) == GameState.IS_WIN:
-            backpropagation(newly_created_node, newly_created_node.player)
+            backpropagation(newly_created_node, newly_created_node.player,board,player)
         if check_end_state(board, opponent) == GameState.IS_WIN:
-            backpropagation(newly_created_node, opponent)
+            backpropagation(newly_created_node, opponent,board,player)
         move = valid_move(board)
 
-    backpropagation(newly_created_node)
+    backpropagation(newly_created_node,winner = None,board=board,player = player)
 
 
-def backpropagation(newly_created_node: Node, winner: None):
+def backpropagation(newly_created_node: Node, winner: None, board: np.ndarray, player: BoardPiece):
     """
     Update the parent scores one by one by going up the tree
     Returns the tree with the updated scores
@@ -132,9 +134,10 @@ def backpropagation(newly_created_node: Node, winner: None):
                 winner is BoardPiece(2) and newly_created_node.player is BoardPiece(1)):
             newly_created_node.wins += 1
     if newly_created_node.parent is not None:
-        backpropagation(newly_created_node.parent, winner)
+        backpropagation(newly_created_node.parent, winner,board,player)
+
     else:
-        choose_move(newly_created_node)
+        return choose_move(newly_created_node)
 
 
 def valid_move(board) -> int:
