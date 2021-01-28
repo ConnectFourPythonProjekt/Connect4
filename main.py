@@ -6,7 +6,7 @@ from agents import common
 from agents.agents_random import generate_move
 from agents.agents_minimax import minimax
 from agents.agents_minimax import minimax_gen_move
-from agents.agents_montecarlo.monte_carlo import Node, choose_move, generate_move_montecarlo
+from agents.agents_montecarlo.monte_carlo import Node, generate_move_montecarlo
 
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
@@ -100,3 +100,4 @@ if __name__ == '__main__':
     board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     print(generate_move_montecarlo(board, 1, None))
+    print(common.pretty_print_board(board))
