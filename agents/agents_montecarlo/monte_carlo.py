@@ -3,7 +3,7 @@ import numpy as np
 from agents.common import check_end_state, apply_player_action, GameState, BoardPiece, SavedState, PlayerAction
 import random
 
-LOOP = 4
+LOOP = 150
 WIN = 1
 LOST = -1
 DRAW = 0
@@ -47,15 +47,14 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
-    best_node = selection(root, tree)
-    new_node, updated_tree = expansion(best_node, tree)
-    board_copy = board.copy()
-    outcome = simulation(new_node, board_copy, new_node.player)
-    root, final_tree = backpropagation(new_node, outcome, updated_tree)
+    for i in range(LOOP):
+        best_node = selection(root, tree)
+        new_node, updated_tree = expansion(best_node, tree)
+        board_copy = board.copy()
+        outcome = simulation(new_node, board_copy, new_node.player)
+        root, final_tree = backpropagation(new_node, outcome, updated_tree)
 
     win_rates = [[], []]
-    if not root.children:
-        return root
     for child in root.children:
         win_rate = child.wins / child.simulations
         win_rates[0].append(win_rate)
@@ -153,7 +152,7 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
     """
 
     newly_created_node.simulations += 1  # new node simulations
-
+# TODO: trqbwa da se dobawqt win ako e dr ugracha l186 i l175
     if outcome == LOST:
         newly_created_node.wins += 1
         node = newly_created_node.parent

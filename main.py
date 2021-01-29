@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # child3.simulations = 1
     # child3.move = 5
     board = np.zeros((6, 7))
-    board[0, 0:7] = [1, 2, 1, 1, 2, 1, 0]
+    board[0, 0:7] = [1, 2, 1, 1, 0, 1, 0]
     board[1, 0:7] = [0, 0, 0, 2, 0, 2, 0]
     board[2, 0:7] = [0, 0, 0, 0, 0, 2, 0]
     board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
