@@ -4,8 +4,8 @@ from agents.common import check_end_state, apply_player_action, GameState, Board
 import random
 
 LOOP = 150
-WIN = 1
-LOST = -1
+WIN = 1  # new_leaves player wins
+LOST = -1  # new_leaves player loses
 DRAW = 0
 
 
@@ -47,13 +47,14 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
-    for i in range(LOOP):
+    for i in range(LOOP):  # number of playouts
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
         outcome = simulation(new_node, board_copy, new_node.player)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
 
+    # find the best move
     win_rates = [[], []]
     for child in root.children:
         win_rate = child.wins / child.simulations
@@ -78,9 +79,11 @@ def selection(node: Node, tree: Tree) -> Node:
     """
     Returns the node that has the highest possibility of winning (UCB1)
     """
+    # tree with only root we select the root
     if (node.parent is None) and (not node.children):
         return node
 
+    # finding the best child with UCB1
     best_score = [[], []]
     for node in tree.nodes:
         node.score = upper_confidence_bound(node)
@@ -94,10 +97,8 @@ def selection(node: Node, tree: Tree) -> Node:
 
 def expansion(selected_node: Node, tree: Tree) -> Tuple[Node, Tree]:
     """
-    The function expands the selected node and creates many children nodes.
-    Returns the tree with the newly created node
-    and the newly created node
-    Called by simulation
+    The function expands the selected node and creates children node.
+    Returns new node and updated tree with the newly created node
     """
     if selected_node.player == BoardPiece(1):
         opponent = BoardPiece(2)
@@ -113,8 +114,8 @@ def expansion(selected_node: Node, tree: Tree) -> Tuple[Node, Tree]:
 
 def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) -> int:
     """
-    Recursivly called until the game is finished and a winner emerges
-    updates the score of the new node
+    Recursively called until the game is finished (there is a win or a draw)
+    and return the result
     """
     on_turn = player
 
@@ -137,9 +138,9 @@ def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) 
             on_turn = newly_created_node.player
         # game ends
         if check_end_state(board, newly_created_node.player) == GameState.IS_WIN:
-            return WIN
+            return WIN  # newly_created nodes player wins
         if check_end_state(board, opponent) == GameState.IS_WIN:
-            return LOST
+            return LOST  # newly_created nodes player lost
         move = valid_move(board)
 
     return DRAW
@@ -147,12 +148,12 @@ def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) 
 
 def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple[Node, Tree]:
     """
-    Update the parent scores one by one by going up the tree
-    Returns the tree with the updated scores
+    Update nodes scores one by one by going up the tree until the root
+    Returns the root and tree with the updated scores
     """
 
     newly_created_node.simulations += 1  # new node simulations
-# TODO: trqbwa da se dobawqt win ako e dr ugracha l186 i l175
+
     if outcome == LOST:
         newly_created_node.wins += 1
         node = newly_created_node.parent
@@ -161,27 +162,34 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
                 node.wins += 1
             node.simulations += 1
             node = node.parent
+        node.simulations += 1
+        if newly_created_node.player == node.player:
+            node.wins += 1
 
     elif outcome == WIN:
-        newly_created_node.wins += 1
         node = newly_created_node.parent
         while node.parent is not None:
             if newly_created_node.player != node.player:
                 node.wins += 1
             node.simulations += 1
             node = node.parent
+        node.simulations += 1
+        if newly_created_node.player != node.player:
+            node.wins += 1
     else:
         node = newly_created_node.parent
         while node.parent is not None:
             node.simulations += 1
             node = node.parent
-
-    node.simulations += 1  # root simulations
+        node.simulations += 1
 
     return node, tree
 
 
 def valid_move(board) -> int:
+    """
+    Return a valid random move in the board
+    """
     valid_moves = []  # list with columns, where it can be played
     for col in range(board.shape[1]):
         if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
