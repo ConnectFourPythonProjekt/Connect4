@@ -16,7 +16,7 @@ def test_node():
     child_note = Node(23, board_child, 4, root)
     assert not root == child_note
     assert child_note.parent == root
-    assert child_note.score == 23
+    assert child_note.UCB_score == 23
     assert child_note.move == 4
     assert root.parent is None
 

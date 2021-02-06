@@ -74,30 +74,14 @@ def human_vs_agent(
 
 
 if __name__ == '__main__':
-    # root = Node()
-    # root.wins = 5
-    # root.simulations = 11
-    # root.add_node()
-    # root.add_node()
-    # root.add_node()
-    # child1 = root.children[0]
-    # child2 = root.children[1]
-    # child3 = root.children[2]
-    # child1.wins = 2
-    # child1.simulations = 5
-    # child2.wins = 2
-    # child1.move = 2
-    # child2.simulations = 3
-    # child2.move = 0
-    # child3.wins = 0
-    # child3.simulations = 1
-    # child3.move = 5
+    # human_vs_agent(generate_move_montecarlo)
+
     board = np.zeros((6, 7))
-    board[0, 0:7] = [1, 2, 1, 1, 0, 1, 0]
-    board[1, 0:7] = [0, 0, 0, 2, 0, 2, 0]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 2, 0]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[0, 0:7] = [1, 0, 1, 1, 2, 1, 2]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 2, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 2, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 1, 1]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 1, 2]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     print(generate_move_montecarlo(board, 1, None))
     print(common.pretty_print_board(board))

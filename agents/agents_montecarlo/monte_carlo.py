@@ -2,8 +2,8 @@ from typing import Optional, Tuple
 import numpy as np
 from agents.common import check_end_state, apply_player_action, GameState, BoardPiece, SavedState, PlayerAction
 import random
+import time
 
-LOOP = 150
 WIN = 1  # new_leaves player wins
 LOST = -1  # new_leaves player loses
 DRAW = 0
@@ -11,7 +11,7 @@ DRAW = 0
 
 class Node:
     def __init__(self, score=None, board_state=None, move=None, parent=None, player=None):
-        self.score = score
+        self.UCB_score = score
         self.children = []
         self.board_state = board_state
         self.move = move
@@ -19,6 +19,7 @@ class Node:
         self.simulations = 0
         self.wins = 0
         self.player = player
+        self.done_moves = []
 
     def add_node(self):
         new_node = Node()
@@ -47,13 +48,22 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
-    for i in range(LOOP):  # number of playouts
+    tic = time.perf_counter()
+
+    PERIOD_OF_TIME = 4  # sec
+
+    while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
         outcome = simulation(new_node, board_copy, new_node.player)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
+        toc = time.perf_counter()
+        if toc - tic > PERIOD_OF_TIME: break
 
+    tuc = time.perf_counter()
+
+    print(f"Time after MCTR with loop in {tuc - tic:0.4f} sec")
     # find the best move
     win_rates = [[], []]
     for child in root.children:
@@ -63,6 +73,8 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     max_score = max(win_rates[0])
     max_score_index = win_rates[0].index(max_score)
     best_node = win_rates[1][max_score_index]
+    toc2 = time.perf_counter()
+
     return best_node.move
 
 
@@ -86,8 +98,8 @@ def selection(node: Node, tree: Tree) -> Node:
     # finding the best child with UCB1
     best_score = [[], []]
     for node in tree.nodes:
-        node.score = upper_confidence_bound(node)
-        best_score[0].append(node.score)
+        node.UCB_score = upper_confidence_bound(node)
+        best_score[0].append(node.UCB_score)
         best_score[1].append(node)
     max_score = max(best_score[0])
     max_score_index = best_score[0].index(max_score)
@@ -124,8 +136,12 @@ def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) 
     else:
         opponent = BoardPiece(1)
 
-    move = valid_move(board)
+    move = valid_move(board, newly_created_node)
+
     newly_created_node.move = move
+
+
+
     newly_created_node.board_state = board
     while (check_end_state(board, newly_created_node.player) == GameState.STILL_PLAYING and
            check_end_state(board, opponent) == GameState.STILL_PLAYING):
@@ -141,7 +157,10 @@ def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) 
             return WIN  # newly_created nodes player wins
         if check_end_state(board, opponent) == GameState.IS_WIN:
             return LOST  # newly_created nodes player lost
-        move = valid_move(board)
+        if valid_move(board) is None:
+            break
+        else:
+            move = valid_move(board)
 
     return DRAW
 
@@ -186,13 +205,15 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
     return node, tree
 
 
-def valid_move(board) -> int:
+def valid_move(board: np.ndarray, node: Node) -> int:
     """
     Return a valid random move in the board
     """
     valid_moves = []  # list with columns, where it can be played
     for col in range(board.shape[1]):
-        if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
+        if np.count_nonzero(board[:, col] == 0) > 0 and col not in node.parent.done_moves:  # check whether the column is full
             valid_moves.append(col)
 
+    if len(valid_moves) == 0:
+        return None
     return random.choice(valid_moves)
