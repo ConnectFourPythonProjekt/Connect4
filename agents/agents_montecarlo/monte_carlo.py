@@ -1,5 +1,7 @@
 from typing import Optional, Tuple
 import numpy as np
+
+from agents import common
 from agents.common import check_end_state, apply_player_action, GameState, BoardPiece, SavedState, PlayerAction
 import random
 import time
@@ -7,6 +9,9 @@ import time
 WIN = 1  # new_leaves player wins
 LOST = -1  # new_leaves player loses
 DRAW = 0
+ROW = 6
+COL = 7
+PERIOD_OF_TIME = 3 # sec
 
 
 class Node:
@@ -19,7 +24,7 @@ class Node:
         self.simulations = 0
         self.wins = 0
         self.player = player
-        self.done_moves = []
+        # self.done_moves = []
 
     def add_node(self):
         new_node = Node()
@@ -48,20 +53,20 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
-    tic = time.perf_counter()
-
-    PERIOD_OF_TIME = 4  # sec
-
+    tic = time.time()
+    c = 1
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
-        outcome = simulation(new_node, board_copy, new_node.player)
+        outcome = simulation(new_node, board_copy)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
-        toc = time.perf_counter()
-        if toc - tic > PERIOD_OF_TIME: break
-
-    tuc = time.perf_counter()
+        toc = time.time()
+        toc_tic = toc - tic
+        c+=1
+        if toc_tic > PERIOD_OF_TIME: break
+    print(c)
+    tuc = time.time()
 
     print(f"Time after MCTR with loop in {tuc - tic:0.4f} sec")
     # find the best move
@@ -73,8 +78,8 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     max_score = max(win_rates[0])
     max_score_index = win_rates[0].index(max_score)
     best_node = win_rates[1][max_score_index]
-    toc2 = time.perf_counter()
-
+    toc2 = time.time()
+    print(f"Time + best node move {toc2-tic:0.4f} sec")
     return best_node.move
 
 
@@ -112,56 +117,47 @@ def expansion(selected_node: Node, tree: Tree) -> Tuple[Node, Tree]:
     The function expands the selected node and creates children node.
     Returns new node and updated tree with the newly created node
     """
-    if selected_node.player == BoardPiece(1):
-        opponent = BoardPiece(2)
-    else:
-        opponent = BoardPiece(1)
 
     selected_node.add_node()
     new_node = selected_node.children[len(selected_node.children) - 1]
     tree.add_to_nodes(new_node)
-    new_node.player = opponent
+    new_node.player = other_player(selected_node)
     return new_node, tree
 
 
-def simulation(newly_created_node: Node, board: np.ndarray, player: BoardPiece) -> int:
+def simulation(newly_created_node: Node, board: np.ndarray) -> int:
     """
-    Recursively called until the game is finished (there is a win or a draw)
+    Called until the game is finished (there is a win or a draw)
     and return the result
     """
-    on_turn = player
 
-    if newly_created_node.player == BoardPiece(1):
-        opponent = BoardPiece(2)
-    else:
-        opponent = BoardPiece(1)
-
-    move = valid_move(board, newly_created_node)
-
+    opponent = other_player(newly_created_node)
+    move = valid_move(board)
     newly_created_node.move = move
 
+    board_copy = board.copy()
+    newly_created_node.board_state = apply_player_action(board_copy, move, opponent, False)
 
-
-    newly_created_node.board_state = board
-    while (check_end_state(board, newly_created_node.player) == GameState.STILL_PLAYING and
-           check_end_state(board, opponent) == GameState.STILL_PLAYING):
-        # do moves
-        if on_turn == newly_created_node.player:
-            apply_player_action(board, move, newly_created_node.player)
-            on_turn = opponent
-        else:
-            apply_player_action(board, move, opponent)
-            on_turn = newly_created_node.player
-        # game ends
-        if check_end_state(board, newly_created_node.player) == GameState.IS_WIN:
-            return WIN  # newly_created nodes player wins
-        if check_end_state(board, opponent) == GameState.IS_WIN:
-            return LOST  # newly_created nodes player lost
-        if valid_move(board) is None:
+    on_turn = newly_created_node.player
+    while (check_end_state(board_copy, newly_created_node.player) == GameState.STILL_PLAYING and
+           check_end_state(board_copy, opponent) == GameState.STILL_PLAYING):
+        if valid_move(board_copy) is None:
             break
         else:
-            move = valid_move(board)
+            move = valid_move(board_copy)
 
+        # do moves
+        if on_turn == newly_created_node.player:
+            apply_player_action(board_copy, move, newly_created_node.player)
+            on_turn = opponent
+        else:
+            apply_player_action(board_copy, move, opponent)
+            on_turn = newly_created_node.player
+        # game ends
+        if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
+            return LOST  # newly_created nodes player wins
+        if check_end_state(board_copy, opponent) == GameState.IS_WIN:
+            return WIN  # newly_created nodes player lost
     return DRAW
 
 
@@ -205,15 +201,99 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
     return node, tree
 
 
-def valid_move(board: np.ndarray, node: Node) -> int:
+def valid_move(board: np.ndarray) -> int:
     """
     Return a valid random move in the board
     """
     valid_moves = []  # list with columns, where it can be played
     for col in range(board.shape[1]):
-        if np.count_nonzero(board[:, col] == 0) > 0 and col not in node.parent.done_moves:  # check whether the column is full
+        if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
             valid_moves.append(col)
 
     if len(valid_moves) == 0:
         return None
+
     return random.choice(valid_moves)
+
+
+def other_player(node: Node) -> BoardPiece:
+    if node.player == BoardPiece(1):
+        return BoardPiece(2)
+    else:
+        return BoardPiece(1)
+
+
+def get_position_mask_bitmap(node: Node) -> Tuple[int, int]:
+    board = node.board_state
+    player = other_player(node)
+    position, mask = '', ''
+    # Start with right-most column
+    for j in range(6, -1, -1):
+        # Add 0-bits to sentinel
+        mask += '0'
+        position += '0'
+        # Start with bottom row
+        for i in range(0, 6):
+            mask += ['0', '1'][board[i, j] != 0]
+            position += ['0', '1'][board[i, j] == player]
+    return int(position, 2), int(mask, 2)
+
+
+def connected_three(position: int):
+    # Diagonal /
+    m = position & (position >> 8)
+    if m & (m >> 8):
+        return True
+    # Diagonal \
+    m = position & (position >> 6)
+    if m & (m >> 6):
+        return True
+
+    # Horizontal
+    m = position & (position >> 7)
+    if m & (m >> 7):
+        return True
+
+    # Vertical
+    m = position & (position >> 1)
+    if m & (m >> 1):
+        return True
+
+    # Nothing found
+    return False
+
+
+def connected_two(position: int):
+    # Diagonal /
+    if position & (position >> 8):
+        return True
+    # Diagonal \
+    if position & (position >> 6):
+        return True
+
+    # Horizontal and Vertical
+    if position & (position >> 7):
+        return True
+    # Nothing found
+    return False
+
+
+def connected_four(position):
+    # Horizontal check
+    m = position & (position >> 7)
+    if m & (m >> 14):
+        return True
+    # Diagonal \
+    m = position & (position >> 6)
+    if m & (m >> 12):
+        return True
+    # Diagonal /
+    m = position & (position >> 8)
+    if m & (m >> 16):
+        return True
+    # Vertical
+    m = position & (position >> 1)
+    if m & (m >> 2):
+        return True
+    # Nothing found
+    return False
