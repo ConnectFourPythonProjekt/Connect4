@@ -1,4 +1,5 @@
-from agents.agents_montecarlo.monte_carlo import Node, Tree, selection, expansion, simulation, backpropagation
+from agents.agents_montecarlo.monte_carlo import Node, Tree, selection, expansion, simulation, backpropagation, generate_move_montecarlo \
+
 from agents.common import initialize_game_state, apply_player_action, BoardPiece
 
 

@@ -23,6 +23,7 @@ def generate_move_minimax(board: np.ndarray, player: BoardPiece, saved_state: Op
            Tuple[PlayerAction, SavedState]: returns the column, where the agent will play and agent computations
        """
     board_copy = board.copy()
+
     # compute with alpha-beta next action
     value, SavedValue = alpha_beta_minimax(board_copy, player, -math.inf, math.inf, DEPTH, True)
     action = np.where(SavedValue == value)[0][0]  # find the column comes the best value
