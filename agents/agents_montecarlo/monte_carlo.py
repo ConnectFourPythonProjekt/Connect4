@@ -11,7 +11,7 @@ LOST = -1  # new_leaves player loses
 DRAW = 0
 ROW = 6
 COL = 7
-PERIOD_OF_TIME = 3  # sec
+PERIOD_OF_TIME = 1  # sec
 
 
 class Node:
@@ -24,7 +24,6 @@ class Node:
         self.simulations = 0
         self.wins = 0
         self.player = player
-        # self.done_moves = []
 
     def add_node(self):
         new_node = Node()
@@ -53,22 +52,16 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
-    tic = time.time()
-    c = 1
+    tic = time.time()  # start timer
+    # execute algorithm until time is out
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
         outcome = simulation(new_node, board_copy)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
-        toc = time.time()
-        toc_tic = toc - tic
-        c += 1
-        if toc_tic > PERIOD_OF_TIME: break
-    print(c)
-    tuc = time.time()
+        if time.time() - tic > PERIOD_OF_TIME: break    #out of time
 
-    print(f"Time after MCTR with loop in {tuc - tic:0.4f} sec")
     # find the best move
     win_rates = [[], []]
     for child in root.children:
@@ -78,9 +71,7 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     max_score = max(win_rates[0])
     max_score_index = win_rates[0].index(max_score)
     best_node = win_rates[1][max_score_index]
-    toc2 = time.time()
-    print(f"Time + best node move {toc2 - tic:0.4f} sec")
-    print(best_node.move)
+
     return best_node.move
 
 
@@ -156,9 +147,9 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
             on_turn = newly_created_node.player
         # game ends
         if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
-            return LOST  # newly_created nodes player wins
+            return LOST
         if check_end_state(board_copy, opponent) == GameState.IS_WIN:
-            return WIN  # newly_created nodes player lost
+            return WIN
     return DRAW
 
 
@@ -206,42 +197,25 @@ def valid_move(board: np.ndarray, player: BoardPiece) -> int:
     """
     Return a valid random move in the board
     """
+
     opponent = other_player(player)
     board_copy = board.copy()
-    valid_moves_three = []
-    block_opponent = []
-    valid_moves_two = []
-    valid_moves_one = []
-    for col in range(board.shape[1]):
-        if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
-            apply_player_action(board, col, player)
-            position, mask = get_position_mask_bitmap(player, board)
-            if connected_four(position):
+    next_move = [[], [], [], []]
+    for col in range(COL):
+        if np.count_nonzero(board[:, col] == 0) > 0:
+            apply_player_action(board_copy, col, player)
+            position, mask = get_position_mask_bitmap(player, board_copy)
+            number_connected = number_of_connected(position)
+            next_move[number_connected - 1].append(col)
+            board_copy = board.copy()
+            apply_player_action(board_copy, col, opponent)
+            pos, mask = get_position_mask_bitmap(opponent, board_copy)
+            if connected_four(pos):
                 return col
-            elif connected_three(position):
-                valid_moves_three.append(col)
-            elif connected_two(position):
-                valid_moves_two.append(col)
-            else:
-                valid_moves_one.append(col)
-            board = board_copy.copy()
-
-            apply_player_action(board, col, opponent)
-            position, mask = get_position_mask_bitmap(opponent, board)
-            if connected_four(position):
-                block_opponent.append(col)
-        board = board_copy.copy()
-    if len(valid_moves_one) == 0 and len(valid_moves_two) == 0 and len(valid_moves_three) == 0:
-        return None
-    else:
-        if block_opponent:
-            return random.choice(block_opponent)
-        elif valid_moves_three:
-            return random.choice(valid_moves_three)
-        elif valid_moves_two:
-            return random.choice(valid_moves_two)
-        else:
-            return random.choice(valid_moves_one)
+    while True:
+        item = next_move.pop()
+        if len(item) != 0:
+            return random.choice(item)
 
 
 def other_player(player: BoardPiece) -> BoardPiece:
@@ -252,8 +226,6 @@ def other_player(player: BoardPiece) -> BoardPiece:
 
 
 def get_position_mask_bitmap(player: BoardPiece, board: np.ndarray) -> Tuple[int, int]:
-    # board = node.board_state
-    # player = other_player(node)
     position, mask = '', ''
     # Start with right-most column
     for j in range(6, -1, -1):
@@ -267,7 +239,18 @@ def get_position_mask_bitmap(player: BoardPiece, board: np.ndarray) -> Tuple[int
     return int(position, 2), int(mask, 2)
 
 
-def connected_three(position: int):
+def number_of_connected(position: int) -> int:
+    if connected_four(position):
+        return 4
+    elif connected_three(position):
+        return 3
+    elif connected_two(position):
+        return 2
+    else:
+        return 1
+
+
+def connected_three(position: int) -> bool:
     # Diagonal /
     m = position & (position >> 8)
     if m & (m >> 8):
@@ -291,7 +274,7 @@ def connected_three(position: int):
     return False
 
 
-def connected_two(position: int):
+def connected_two(position: int) -> bool:
     # Diagonal /
     if position & (position >> 8):
         return True
@@ -299,14 +282,17 @@ def connected_two(position: int):
     if position & (position >> 6):
         return True
 
-    # Horizontal and Vertical
+    # Horizontal
     if position & (position >> 7):
+        return True
+    # Vertical
+    if position & (position >> 1):
         return True
     # Nothing found
     return False
 
 
-def connected_four(position):
+def connected_four(position) -> bool:
     # Horizontal check
     m = position & (position >> 7)
     if m & (m >> 14):
