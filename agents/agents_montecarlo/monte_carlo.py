@@ -54,13 +54,15 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     tic = time.time()  # start timer
     # execute algorithm until time is out
+    c = 0
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
         outcome = simulation(new_node, board_copy)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
-        if time.time() - tic > PERIOD_OF_TIME: break    #out of time
+        c += 1
+        # if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
     # find the best move
     win_rates = [[], []]
@@ -128,7 +130,7 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
     newly_created_node.move = move
 
     board_copy = board.copy()
-    newly_created_node.board_state = apply_player_action(board_copy, move, opponent, False)
+    newly_created_node.board_state = apply_player_action(board, move, opponent, False)
 
     on_turn = newly_created_node.player
     while (check_end_state(board_copy, newly_created_node.player) == GameState.STILL_PLAYING and
@@ -197,25 +199,32 @@ def valid_move(board: np.ndarray, player: BoardPiece) -> int:
     """
     Return a valid random move in the board
     """
+    #
+    # opponent = other_player(player)
+    # board_copy = board.copy()
+    # next_move = [[], [], [], []]
+    # for col in range(COL):
+    #     if np.count_nonzero(board[:, col] == 0) > 0:
+    #         apply_player_action(board_copy, col, player)
+    #         position, mask = get_position_mask_bitmap(player, board_copy)
+    #         number_connected = number_of_connected(position)
+    #         next_move[number_connected - 1].append(col)
+    #         board_copy = board.copy()
+    #         apply_player_action(board_copy, col, opponent)
+    #         pos, mask = get_position_mask_bitmap(opponent, board_copy)
+    #         if connected_four(pos):
+    #             return col
+    # while True:
+    #     item = next_move.pop()
+    #     if len(item) != 0:
+    #         return random.choice(item)
 
-    opponent = other_player(player)
-    board_copy = board.copy()
-    next_move = [[], [], [], []]
-    for col in range(COL):
-        if np.count_nonzero(board[:, col] == 0) > 0:
-            apply_player_action(board_copy, col, player)
-            position, mask = get_position_mask_bitmap(player, board_copy)
-            number_connected = number_of_connected(position)
-            next_move[number_connected - 1].append(col)
-            board_copy = board.copy()
-            apply_player_action(board_copy, col, opponent)
-            pos, mask = get_position_mask_bitmap(opponent, board_copy)
-            if connected_four(pos):
-                return col
-    while True:
-        item = next_move.pop()
-        if len(item) != 0:
-            return random.choice(item)
+    actionList = []  # list with columns, where it can be played
+    for col in range(board.shape[1]):
+        if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
+            actionList.append(col)
+
+    return random.choice(actionList)
 
 
 def other_player(player: BoardPiece) -> BoardPiece:

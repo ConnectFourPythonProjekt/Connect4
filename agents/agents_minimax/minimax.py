@@ -46,11 +46,7 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
     """
 
     # define the opponent
-    opponent = 0
-    if player == BoardPiece(1):
-        opponent = BoardPiece(2)
-    else:
-        opponent = BoardPiece(1)
+    opponent = other_player(player)
 
     # evaluate current board when all the moves are done or game is won by one of the players
     if (depth == 0 or
@@ -58,7 +54,8 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
             game_state(board, BoardPiece(2)) != GameState.STILL_PLAYING):
         return (depth + 1) * evaluate_curr_board(board, player) - (depth + 1) * evaluate_curr_board(board, opponent)
 
-    SavedValue = np.zeros(7)   # list with computed values for each column
+
+    SavedValue = np.zeros(7)  # list with computed values for each column
     # Alpha - Beta pruning
     # maximising the agent
     if maximising:
@@ -78,7 +75,7 @@ def alpha_beta_minimax(board: np.ndarray, player: BoardPiece, alpha: int, beta: 
             else:
                 SavedValue[col] = None  # when the column is full
         if depth == DEPTH:
-            return alpha, SavedValue    # final return
+            return alpha, SavedValue  # final return
         else:
             return alpha
     # minimising the opponent
@@ -106,11 +103,7 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
             Return:
                 int: sum of the evaluated values for each the column/row and diagonal
             """
-    opponent = BoardPiece(0)
-    if player == BoardPiece(1):
-        opponent = BoardPiece(2)
-    else:
-        opponent = BoardPiece(1)
+    opponent = other_player(player)
 
     # when agent wins
     if common.check_end_state(board, player) == GameState.IS_WIN:
@@ -152,7 +145,7 @@ def evaluate_curr_board(board: np.ndarray, player: BoardPiece) -> int:
 def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
     """
         This function calculates the heuristic value of the node.
-        Called by evaluate_curr_board and block.
+        Called by evaluate_curr_board.
         Arguments:
             array_from_board: ndarray that represents specific column/diagonal/row of the board
             player: the player whose moves have to be evaluated
@@ -175,3 +168,10 @@ def evaluate_position(array_from_board: np.ndarray, player: BoardPiece) -> int:
         if np.count_nonzero(tmp == player) == 1 and np.count_nonzero(tmp == BoardPiece(0)) == 3:
             sum_val += 1
     return sum_val
+
+
+def other_player(player: BoardPiece) -> BoardPiece:
+    if player == BoardPiece(1):
+        return BoardPiece(2)
+    else:
+        return BoardPiece(1)

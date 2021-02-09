@@ -74,12 +74,13 @@ def human_vs_agent(
 
 
 if __name__ == '__main__':
-    # human_vs_agent(generate_move_montecarlo)
+    # human_vs_agent(minimax_gen_move)
     board = np.zeros((6, 7))
     board[0, 0:7] = [1, 2, 2, 1, 2, 1, 1]
-    board[1, 0:7] = [1, 2, 2, 1, 1, 1, 2]
-    board[2, 0:7] = [2, 1, 1, 2, 2, 2, 1]
-    board[3, 0:7] = [1, 1, 2, 1, 1, 1, 2]
-    board[4, 0:7] = [2, 2, 1, 2, 2, 1, 2]
-    board[5, 0:7] = [1, 1, 2, 0, 1, 0, 0]
-    print(generate_move_montecarlo(board, 1, None))
+    board[1, 0:7] = [0, 1, 0, 1, 2, 0, 0]
+    board[2, 0:7] = [0, 2, 0, 2, 1, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 1, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    print(common.pretty_print_board(board))
+    print(minimax_gen_move(board, BoardPiece(1), None))
