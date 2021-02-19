@@ -11,7 +11,7 @@ LOST = -1  # new_leaves player loses
 DRAW = 0
 ROW = 6
 COL = 7
-PERIOD_OF_TIME = 1  # sec
+PERIOD_OF_TIME = 7  # sec
 
 
 class Node:
@@ -31,7 +31,8 @@ class Node:
         new_node.parent = self
 
     def __repr__(self):
-        return f'Node(parent={self.parent})'
+        return f' Move: {self.move} Wins: {self.wins} Simulation: {self.simulations}'
+
 
 
 class Tree:
@@ -41,6 +42,8 @@ class Tree:
 
     def add_to_nodes(self, node: Node):
         self.nodes.append(node)
+
+
 
 
 def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
@@ -53,21 +56,21 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     tic = time.time()  # start timer
+
     # execute algorithm until time is out
-    c = 0
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
         board_copy = board.copy()
         outcome = simulation(new_node, board_copy)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
-        c += 1
-        # if time.time() - tic > PERIOD_OF_TIME: break  # out of time
+        if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
     # find the best move
     win_rates = [[], []]
     for child in root.children:
-        win_rate = child.wins / child.simulations
+        # win_rate = child.wins / child.simulations
+        win_rate = child.simulations
         win_rates[0].append(win_rate)
         win_rates[1].append(child)
     max_score = max(win_rates[0])
@@ -91,11 +94,15 @@ def selection(node: Node, tree: Tree) -> Node:
     Returns the node that has the highest possibility of winning (UCB1)
     """
     # tree with only root we select the root
-    if (node.parent is None) and (not node.children):
+    if (node.parent is None) and (len(node.children) < 7):
         return node
 
-    # finding the best child with UCB1
+    tree.root.UCB_score = tree.root.wins / tree.root.simulations
+
     best_score = [[], []]
+    best_score[0].append(tree.root.UCB_score)
+    best_score[1].append(tree.root)
+    # finding the best child with UCB1
     for node in tree.nodes:
         node.UCB_score = upper_confidence_bound(node)
         best_score[0].append(node.UCB_score)
@@ -126,19 +133,28 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
     """
 
     opponent = other_player(newly_created_node.player)
-    move = valid_move(board, opponent)
+    move = valid_move(board, opponent, newly_created_node)
+    if move is None:
+        return DRAW
     newly_created_node.move = move
 
     board_copy = board.copy()
+
     newly_created_node.board_state = apply_player_action(board, move, opponent, False)
+
+    # direct winn
+    # p, m = get_position_mask_bitmap(opponent, newly_created_node.board_state)
+    # if connected_four(p):
+    #     newly_created_node.wins = 100000
+    #     return WIN
 
     on_turn = newly_created_node.player
     while (check_end_state(board_copy, newly_created_node.player) == GameState.STILL_PLAYING and
            check_end_state(board_copy, opponent) == GameState.STILL_PLAYING):
-        if valid_move(board_copy, on_turn) is None:
+        if valid_move(board_copy, on_turn, None) is None:
             break
         else:
-            move = valid_move(board_copy, on_turn)
+            move = valid_move(board_copy, on_turn, None)
 
         # do moves
         if on_turn == newly_created_node.player:
@@ -167,23 +183,23 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
         newly_created_node.wins += 1
         node = newly_created_node.parent
         while node.parent is not None:
-            if newly_created_node.player == node.player:
-                node.wins += 1
-            node.simulations += 1
-            node = node.parent
-        node.simulations += 1
-        if newly_created_node.player == node.player:
-            node.wins += 1
-
-    elif outcome == WIN:
-        node = newly_created_node.parent
-        while node.parent is not None:
             if newly_created_node.player != node.player:
                 node.wins += 1
             node.simulations += 1
             node = node.parent
         node.simulations += 1
         if newly_created_node.player != node.player:
+            node.wins += 1
+
+    elif outcome == WIN:
+        node = newly_created_node.parent
+        while node.parent is not None:
+            if newly_created_node.player == node.player:
+                node.wins += 1
+            node.simulations += 1
+            node = node.parent
+        node.simulations += 1
+        if newly_created_node.player == node.player:
             node.wins += 1
     else:
         node = newly_created_node.parent
@@ -195,11 +211,11 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
     return node, tree
 
 
-def valid_move(board: np.ndarray, player: BoardPiece) -> int:
+def valid_move(board: np.ndarray, player: BoardPiece, node: None) -> int:
     """
     Return a valid random move in the board
     """
-    #
+
     # opponent = other_player(player)
     # board_copy = board.copy()
     # next_move = [[], [], [], []]
@@ -218,13 +234,23 @@ def valid_move(board: np.ndarray, player: BoardPiece) -> int:
     #     item = next_move.pop()
     #     if len(item) != 0:
     #         return random.choice(item)
+    #
+    invalid_moves = []
+    if node:
+        siblings: list = node.parent.children
+        if len(siblings) > 1:
+            for item in siblings:
+                invalid_moves.append(item.move)
 
     actionList = []  # list with columns, where it can be played
     for col in range(board.shape[1]):
-        if np.count_nonzero(board[:, col] == 0) > 0:  # check whether the column is full
+        if np.count_nonzero(board[:, col] == 0) > 0 and col not in invalid_moves:  # check whether the column is full
             actionList.append(col)
 
-    return random.choice(actionList)
+    if len(actionList) > 0:
+        return random.choice(actionList)
+    else:
+        return None
 
 
 def other_player(player: BoardPiece) -> BoardPiece:
