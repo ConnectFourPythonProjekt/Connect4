@@ -138,15 +138,14 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         return DRAW
     newly_created_node.move = move
 
-    board_copy = board.copy()
-
     newly_created_node.board_state = apply_player_action(board, move, opponent, False)
 
+    board_copy = board.copy()
     # direct winn
-    # p, m = get_position_mask_bitmap(opponent, newly_created_node.board_state)
-    # if connected_four(p):
-    #     newly_created_node.wins = 100000
-    #     return WIN
+    p, m = get_position_mask_bitmap(opponent, newly_created_node.board_state)
+    if connected_four(p):
+        newly_created_node.wins = 1000
+        return WIN
 
     on_turn = newly_created_node.player
     while (check_end_state(board_copy, newly_created_node.player) == GameState.STILL_PLAYING and
@@ -159,15 +158,15 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         # do moves
         if on_turn == newly_created_node.player:
             apply_player_action(board_copy, move, newly_created_node.player)
+            if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
+                return LOST
             on_turn = opponent
         else:
             apply_player_action(board_copy, move, opponent)
+            if check_end_state(board_copy, opponent) == GameState.IS_WIN:
+                return WIN
             on_turn = newly_created_node.player
-        # game ends
-        if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
-            return LOST
-        if check_end_state(board_copy, opponent) == GameState.IS_WIN:
-            return WIN
+
     return DRAW
 
 
