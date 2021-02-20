@@ -1,17 +1,15 @@
 from typing import Optional, Tuple
 import numpy as np
-
-from agents import common
 from agents.common import check_end_state, apply_player_action, GameState, BoardPiece, SavedState, PlayerAction
 import random
 import time
 
 WIN = 1  # new_leaves player wins
-LOST = -1  # new_leaves player loses
 DRAW = 0
+LOST = -1
 ROW = 6
 COL = 7
-PERIOD_OF_TIME = 7  # sec
+PERIOD_OF_TIME = 5  # sec
 
 
 class Node:
@@ -34,7 +32,6 @@ class Node:
         return f' Move: {self.move} Wins: {self.wins} Simulation: {self.simulations}'
 
 
-
 class Tree:
     def __init__(self, root: Node):
         self.nodes = []
@@ -42,8 +39,6 @@ class Tree:
 
     def add_to_nodes(self, node: Node):
         self.nodes.append(node)
-
-
 
 
 def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
@@ -56,20 +51,19 @@ def generate_move_montecarlo(board: np.ndarray, player: BoardPiece, saved_state:
 
 def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     tic = time.time()  # start timer
-
+    root.board_state = board
     # execute algorithm until time is out
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
-        board_copy = board.copy()
-        outcome = simulation(new_node, board_copy)
+        # board_copy = board.copy()
+        outcome = simulation(new_node, new_node.parent.board_state.copy())
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
         if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
     # find the best move
     win_rates = [[], []]
     for child in root.children:
-        # win_rate = child.wins / child.simulations
         win_rate = child.simulations
         win_rates[0].append(win_rate)
         win_rates[1].append(child)
@@ -138,34 +132,40 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         return DRAW
     newly_created_node.move = move
 
-    newly_created_node.board_state = apply_player_action(board, move, opponent, False)
+    # block = False
+    # po, mo = get_position_mask_bitmap(newly_created_node.player, board)
+    # if connected_three(po):
+    #     block = True
 
+    newly_created_node.board_state = apply_player_action(board, move, opponent, False)
     board_copy = board.copy()
+
     # direct winn
     p, m = get_position_mask_bitmap(opponent, newly_created_node.board_state)
     if connected_four(p):
-        newly_created_node.wins = 1000
+        newly_created_node.wins = 11000
         return WIN
 
     on_turn = newly_created_node.player
-    while (check_end_state(board_copy, newly_created_node.player) == GameState.STILL_PLAYING and
-           check_end_state(board_copy, opponent) == GameState.STILL_PLAYING):
+
+    while check_end_state(board_copy, opponent, None) == GameState.STILL_PLAYING \
+            and check_end_state(board_copy, newly_created_node.player, None) == GameState.STILL_PLAYING:
         if valid_move(board_copy, on_turn, None) is None:
             break
         else:
             move = valid_move(board_copy, on_turn, None)
-
         # do moves
         if on_turn == newly_created_node.player:
             apply_player_action(board_copy, move, newly_created_node.player)
-            if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
-                return LOST
             on_turn = opponent
         else:
             apply_player_action(board_copy, move, opponent)
-            if check_end_state(board_copy, opponent) == GameState.IS_WIN:
-                return WIN
             on_turn = newly_created_node.player
+
+        if check_end_state(board_copy, opponent) == GameState.IS_WIN:
+            return WIN
+        if check_end_state(board_copy,newly_created_node.player) == GameState.IS_WIN:
+            return LOST
 
     return DRAW
 
@@ -207,6 +207,14 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
             node = node.parent
         node.simulations += 1
 
+    # newly_created_node.simulations += 1
+    # node = newly_created_node
+    # while node is not tree.root:
+    #     node = node.parent
+    #     if outcome == WIN:
+    #         node.wins += 1
+    #     node.simulations += 1
+
     return node, tree
 
 
@@ -234,6 +242,7 @@ def valid_move(board: np.ndarray, player: BoardPiece, node: None) -> int:
     #     if len(item) != 0:
     #         return random.choice(item)
     #
+
     invalid_moves = []
     if node:
         siblings: list = node.parent.children
