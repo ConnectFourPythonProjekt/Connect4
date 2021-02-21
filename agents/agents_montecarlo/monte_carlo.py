@@ -56,8 +56,8 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
     while True:
         best_node = selection(root, tree)
         new_node, updated_tree = expansion(best_node, tree)
-        # board_copy = board.copy()
-        outcome = simulation(new_node, new_node.parent.board_state.copy())
+        b = (new_node.parent.board_state).copy()
+        outcome = simulation(new_node, b)
         root, final_tree = backpropagation(new_node, outcome, updated_tree)
         if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
@@ -87,16 +87,11 @@ def selection(node: Node, tree: Tree) -> Node:
     """
     Returns the node that has the highest possibility of winning (UCB1)
     """
+
     # tree with only root we select the root
     if (node.parent is None) and (len(node.children) < 7):
         return node
-
-    tree.root.UCB_score = tree.root.wins / tree.root.simulations
-
     best_score = [[], []]
-    best_score[0].append(tree.root.UCB_score)
-    best_score[1].append(tree.root)
-    # finding the best child with UCB1
     for node in tree.nodes:
         node.UCB_score = upper_confidence_bound(node)
         best_score[0].append(node.UCB_score)
@@ -132,11 +127,6 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         return DRAW
     newly_created_node.move = move
 
-    # block = False
-    # po, mo = get_position_mask_bitmap(newly_created_node.player, board)
-    # if connected_three(po):
-    #     block = True
-
     newly_created_node.board_state = apply_player_action(board, move, opponent, False)
     board_copy = board.copy()
 
@@ -161,10 +151,10 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         else:
             apply_player_action(board_copy, move, opponent)
             on_turn = newly_created_node.player
-
+        # game is won
         if check_end_state(board_copy, opponent) == GameState.IS_WIN:
             return WIN
-        if check_end_state(board_copy,newly_created_node.player) == GameState.IS_WIN:
+        if check_end_state(board_copy, newly_created_node.player) == GameState.IS_WIN:
             return LOST
 
     return DRAW
@@ -207,14 +197,6 @@ def backpropagation(newly_created_node: Node, outcome: int, tree: Tree) -> Tuple
             node = node.parent
         node.simulations += 1
 
-    # newly_created_node.simulations += 1
-    # node = newly_created_node
-    # while node is not tree.root:
-    #     node = node.parent
-    #     if outcome == WIN:
-    #         node.wins += 1
-    #     node.simulations += 1
-
     return node, tree
 
 
@@ -241,7 +223,6 @@ def valid_move(board: np.ndarray, player: BoardPiece, node: None) -> int:
     #     item = next_move.pop()
     #     if len(item) != 0:
     #         return random.choice(item)
-    #
 
     invalid_moves = []
     if node:
@@ -280,59 +261,59 @@ def get_position_mask_bitmap(player: BoardPiece, board: np.ndarray) -> Tuple[int
             mask += ['0', '1'][board[i, j] != 0]
             position += ['0', '1'][board[i, j] == player]
     return int(position, 2), int(mask, 2)
-
-
-def number_of_connected(position: int) -> int:
-    if connected_four(position):
-        return 4
-    elif connected_three(position):
-        return 3
-    elif connected_two(position):
-        return 2
-    else:
-        return 1
-
-
-def connected_three(position: int) -> bool:
-    # Diagonal /
-    m = position & (position >> 8)
-    if m & (m >> 8):
-        return True
-    # Diagonal \
-    m = position & (position >> 6)
-    if m & (m >> 6):
-        return True
-
-    # Horizontal
-    m = position & (position >> 7)
-    if m & (m >> 7):
-        return True
-
-    # Vertical
-    m = position & (position >> 1)
-    if m & (m >> 1):
-        return True
-
-    # Nothing found
-    return False
-
-
-def connected_two(position: int) -> bool:
-    # Diagonal /
-    if position & (position >> 8):
-        return True
-    # Diagonal \
-    if position & (position >> 6):
-        return True
-
-    # Horizontal
-    if position & (position >> 7):
-        return True
-    # Vertical
-    if position & (position >> 1):
-        return True
-    # Nothing found
-    return False
+#
+#
+# def number_of_connected(position: int) -> int:
+#     if connected_four(position):
+#         return 4
+#     elif connected_three(position):
+#         return 3
+#     elif connected_two(position):
+#         return 2
+#     else:
+#         return 1
+#
+#
+# def connected_three(position: int) -> bool:
+#     # Diagonal /
+#     m = position & (position >> 8)
+#     if m & (m >> 8):
+#         return True
+#     # Diagonal \
+#     m = position & (position >> 6)
+#     if m & (m >> 6):
+#         return True
+#
+#     # Horizontal
+#     m = position & (position >> 7)
+#     if m & (m >> 7):
+#         return True
+#
+#     # Vertical
+#     m = position & (position >> 1)
+#     if m & (m >> 1):
+#         return True
+#
+#     # Nothing found
+#     return False
+#
+#
+# def connected_two(position: int) -> bool:
+#     # Diagonal /
+#     if position & (position >> 8):
+#         return True
+#     # Diagonal \
+#     if position & (position >> 6):
+#         return True
+#
+#     # Horizontal
+#     if position & (position >> 7):
+#         return True
+#     # Vertical
+#     if position & (position >> 1):
+#         return True
+#     # Nothing found
+#     return False
 
 
 def connected_four(position) -> bool:

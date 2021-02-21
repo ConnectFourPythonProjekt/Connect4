@@ -6,7 +6,8 @@ from agents import common
 from agents.agents_random import generate_move
 from agents.agents_minimax import minimax
 from agents.agents_minimax import minimax_gen_move
-from agents.agents_montecarlo.monte_carlo import Node, generate_move_montecarlo
+from agents.agents_montecarlo.monte_carlo import Node, generate_move_montecarlo, get_position_mask_bitmap, \
+    connected_four
 
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
@@ -20,14 +21,14 @@ def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[Save
 
 
 def human_vs_agent(
-    generate_move_1: GenMove,
-    generate_move_2: GenMove = user_move,
-    player_1: str = "Player 1",
-    player_2: str = "Player 2",
-    args_1: tuple = (),
-    args_2: tuple = (),
-    init_1: Callable = lambda board, player: None,
-    init_2: Callable = lambda board, player: None,
+        generate_move_1: GenMove,
+        generate_move_2: GenMove = user_move,
+        player_1: str = "Player 1",
+        player_2: str = "Player 2",
+        args_1: tuple = (),
+        args_2: tuple = (),
+        init_1: Callable = lambda board, player: None,
+        init_2: Callable = lambda board, player: None,
 ):
     import time
     from agents.common import PLAYER1, PLAYER2, GameState
@@ -47,7 +48,7 @@ def human_vs_agent(
         playing = True
         while playing:
             for player, player_name, gen_move, args in zip(
-                players, player_names, gen_moves, gen_args,
+                    players, player_names, gen_moves, gen_args,
             ):
                 t0 = time.time()
                 print(pretty_print_board(board))
@@ -72,44 +73,37 @@ def human_vs_agent(
                     break
 
 
-
 if __name__ == '__main__':
     # human_vs_agent(generate_move_montecarlo)
     # root = Node()
-    board = np.zeros((6,7))
+    board = np.zeros((6, 7))
     board[0, 0:7] = [1, 1, 2, 0, 0, 1, 2]
     board[1, 0:7] = [2, 0, 2, 0, 0, 0, 1]
     board[2, 0:7] = [0, 0, 0, 0, 0, 0, 1]
     board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # #
-    print(generate_move_montecarlo(board, BoardPiece(1),None))
-    # common.apply_player_action(board,3,BoardPiece(2))
-    # print(board)
-    # root.wins = 5
-    # root.simulations = 11
-    # root.add_node()
-    # root.add_node()
-    # root.add_node()
-    # child1 = root.children[0]
-    # child2 = root.children[1]
-    # child3 = root.children[2]
-    # child1.wins = 2
-    # child1.simulations = 5
-    # child2.wins = 2
-    # child1.move = 2
-    # child2.simulations = 3
-    # child2.move = 0
-    # child3.wins = 0
-    # child3.simulations = 1
-    # child3.move = 5
-    # board = np.zeros((6, 7))
-    # board[0, 0:7] = [1, 2, 1, 1, 0, 1, 0]
-    # board[1, 0:7] = [0, 0, 0, 2, 0, 2, 0]
-    # board[2, 0:7] = [0, 0, 0, 0, 0, 2, 0]
-    # board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    # print(generate_move_montecarlo(board, 1, None))
-    # print(common.pretty_print_board(board))
+    print(generate_move_montecarlo(board,1,None))
+
+
+
+    # counter = 0
+    # for i in range(10):
+    #     board_copy = common.initialize_game_state()
+    #     print("i:", i)
+    #     while True:
+    #         move, ss = generate_move_montecarlo(board_copy, BoardPiece(1), None)
+    #         common.apply_player_action(board_copy, move, BoardPiece(1), False)
+    #         p, m = get_position_mask_bitmap(1, board_copy)
+    #         if m == 562949953421311:
+    #             break
+    #         if connected_four(p):
+    #             counter += 1
+    #             break
+    #         random, sss = minimax_gen_move(board_copy, BoardPiece(2), None)
+    #         common.apply_player_action(board_copy, random, BoardPiece(2), False)
+    #         p1, m1 = get_position_mask_bitmap(2, board_copy)
+    #         if connected_four(p1) or m1 == 562949953421311:
+    #             break
+    #
+    # print(counter)
