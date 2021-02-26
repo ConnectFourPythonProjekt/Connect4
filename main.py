@@ -96,18 +96,19 @@ def play():
 
 
 if __name__ == '__main__':
-    # human_vs_agent(generate_move_montecarlo)
+    human_vs_agent(generate_move_montecarlo)
     # root = Node()
-    board = np.zeros((6, 7))
-    board[0, 0:7] = [0, 0, 1, 1, 2, 2, 1]
-    board[1, 0:7] = [0, 0, 1, 2, 1, 2, 0]
-    board[2, 0:7] = [0, 0, 1, 2, 1, 2, 0]
-    board[3, 0:7] = [0, 0, 2, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    print(common.pretty_print_board(board))
-    p,m = get_position_mask_bitmap(1, board)
-    print(connected_three(p, m))
+    # board = np.zeros((6, 7))
+    # board[0, 0:7] = [1, 1, 2, 2, 2, 0, 0]
+    # board[1, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    # print(common.pretty_print_board(board))
+    # op_p, m = get_position_mask_bitmap(2,board)
+    # # print(connected_three(op_p,m))
+    # print(generate_move_montecarlo(board,1,None))
 
 
 

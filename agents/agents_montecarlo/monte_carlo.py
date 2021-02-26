@@ -12,7 +12,7 @@ PERIOD_OF_TIME = 3  # in sec; set the timer
 
 
 class Node:
-    def __init__(self, score=None, board_state=None, move=None, parent=None, player=None):
+    def __init__(self, board_state=None, move=None, parent=None, player=None):
         self.children = []
         self.board_state = board_state
         self.move = move
@@ -199,7 +199,7 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
     return DRAW
 
 
-def evaluate(node: Node, opponent: BoardPiece, board: np.ndarray) -> int:
+def evaluate(node: Node, opponent: BoardPiece, board_before: np.ndarray) -> int:
     """
     Return evaluation of the board after nodes move
     Arguments:
@@ -209,17 +209,17 @@ def evaluate(node: Node, opponent: BoardPiece, board: np.ndarray) -> int:
     Return
         int: nodes value after the move
     """
-    pos_opp, m = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
-    pos_player, m = get_position_mask_bitmap(node.player, board)  # other player position before the move
-    pos_player_block, m = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
+    pos_opp, m1 = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
+    pos_player, m2 = get_position_mask_bitmap(node.player, board_before)  # other player position before the move
+    pos_player_block, m3 = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
 
     if connected_four(pos_opp):
-        return 20000
+        return 200000
     # check after the move if we blocked the other player
-    elif number_of_connected(pos_player, m) == 3 and number_of_connected(pos_player_block, m) != 3:
-        return 10000
+    elif number_of_connected(pos_player, m2) == 3 and number_of_connected(pos_player_block, m3) != 3:
+        return 100000
     else:
-        return evaluate_board(pos_opp, m)
+        return evaluate_board(pos_opp, m1)
 
 
 def evaluate_board(position: int, mask: int) -> int:
@@ -347,6 +347,7 @@ def number_of_connected(position: int, mask: int) -> int:
     Returns number of connected pieces for player by given position
     Arguments:
         position: bit representation of the board with players pieces
+        mask: bit representation of board with all pieces
     Return:
         int: number of connected pieces
     """
@@ -447,7 +448,6 @@ def connected_three(position: int, mask: int) -> bool:
     return False
 
 
-# TODO:
 def connected_two(position: int, mask: int) -> bool:
     """
     Return True, when the player has connected 2
@@ -457,18 +457,53 @@ def connected_two(position: int, mask: int) -> bool:
     Return:
         bool: True for 2 connected
     """
+
+    opp_pos = mask ^ position
+
     # Diagonal /
-    if position & (position >> 8):
-        return True
+    tmp = position & (position >> 8)
+    if tmp:
+        bits = "{0: 049b}".format(tmp)
+        foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
+        for j in range(len(foo)):
+            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and ((opp_pos >> int(foo[j] + 32)) & 1) != 1:
+                return True
+            elif foo[j] >= 16 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1 and ((opp_pos >> int(foo[j] - 16)) & 1) != 1:
+                return True
+
     # Diagonal \
-    if position & (position >> 6):
-        return True
+    tmp = position & (position >> 6)
+    if tmp:
+        bits = "{0: 049b}".format(tmp)
+        foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
+        for j in range(len(foo)):
+            if ((opp_pos >> int(foo[j] + 6)) & 1) != 1 and ((opp_pos >> int(foo[j] + 12)) & 1) != 1:
+                return True
+            elif foo[j] >= 18 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and ((opp_pos >> int(foo[j] - 18)) & 1) != 1:
+                return True
 
     # Horizontal
-    if position & (position >> 7):
-        return True
+    tmp = position & (position >> 7)
+    if tmp:
+        bits = "{0: 049b}".format(tmp)
+        foo = [len(bits) - i - 1 + 7 for i in range(0, len(bits)) if bits[i] == '1']
+        for j in range(len(foo)):
+            if ((opp_pos >> int(foo[j] + 7)) & 1) != 1 and (opp_pos >> int(foo[j] + 7)) != 0 and \
+                    ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and (opp_pos >> int(foo[j] + 14)) != 0 :
+                return True
+            elif foo[j] >= 21 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1 and ((opp_pos >> int(foo[j] - 21)) & 1) != 1:
+                return True
+            elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1 and ((opp_pos >> int(foo[j] + 7)) & 1) != 1:
+                return True
+
     # Vertical
-    if position & (position >> 1):
-        return True
+    tmp = position & (position >> 1)
+    if tmp:
+        bits = "{0: 049b}".format(tmp)
+        foo = [len(bits) - i for i in range(0, len(bits)) if bits[i] == '1']
+        for j in range(len(foo)):
+            if foo[j] >= 2 and ((opp_pos >> int(foo[j] - 2)) & 1) != 1:
+                return True
+
     # Nothing found
     return False
