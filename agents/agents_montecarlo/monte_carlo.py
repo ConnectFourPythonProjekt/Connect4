@@ -217,13 +217,13 @@ def evaluate(node: Node, opponent: BoardPiece, board: np.ndarray) -> int:
         return 20000
     # check after the move if we blocked the other player
     # TODO: te pak shte sa si connected 3 ama nqma da ima prazno mqsto. s tazi prowerka ne stawa
-    elif number_of_connected(pos_player) == 3 and number_of_connected(pos_player_block) != 3:
+    elif number_of_connected(pos_player, m) == 3 and number_of_connected(pos_player_block, m) != 3:
         return 10000
     else:
-        return evaluate_board(pos_opp)
+        return evaluate_board(pos_opp, m)
 
 
-def evaluate_board(position: int) -> int:
+def evaluate_board(position: int, mask: int) -> int:
     """
     Evaluate board according to bit position
     Arguments:
@@ -231,7 +231,7 @@ def evaluate_board(position: int) -> int:
     Return:
         int: value of the board
     """
-    num = number_of_connected(position)
+    num = number_of_connected(position, mask)
     if num == 3:
         return 10000
     elif num == 2:
@@ -342,7 +342,7 @@ def get_position_mask_bitmap(player: BoardPiece, board: np.ndarray) -> Tuple[int
     return int(position, 2), int(mask, 2)
 
 
-def number_of_connected(position: int) -> int:
+def number_of_connected(position: int, mask: int) -> int:
     """
     Returns number of connected pieces for player by given position
     Arguments:
@@ -352,9 +352,9 @@ def number_of_connected(position: int) -> int:
     """
     if connected_four(position):
         return 4
-    elif connected_three(position):
+    elif connected_three(position, mask):
         return 3
-    elif connected_two(position):
+    elif connected_two(position, mask):
         return 2
     else:
         return 1
@@ -388,7 +388,7 @@ def connected_four(position) -> bool:
     return False
 
 #TODO:
-def connected_three(position: int) -> bool:
+def connected_three(position: int, mask: int) -> bool:
     """
     Return True, when the player has connected 3
     Arguments:
@@ -396,28 +396,49 @@ def connected_three(position: int) -> bool:
     Return:
         bool: True for 3 connected
     """
+
+    # Diagonal /
     m = position & (position >> 8)
     if m & (m >> 8):
         return True
+
     # Diagonal \
     m = position & (position >> 6)
     if m & (m >> 6):
         return True
     # Horizontal
     m = position & (position >> 7)
-    if m & (m >> 7):
-        return True
+    b = m & (m >> 7)
+    if b:
+        bits = "{0: 049b}".format(b)
+        foo = [len(bits) - i - 1 + 7 for i in range(0, len(bits)) if bits[i] == '1']
+        opp_pos = mask ^ position
+        for j in range(len(foo)):
+            if foo[j] < 14:
+                if ((opp_pos >> int(foo[j] + 14)) & 1) != 1:
+                    return True
+                else: break
+            elif((opp_pos >> int(foo[j] + 14)) & 1) != 1 or ((opp_pos >> int(foo[j] - 14)) & 1) != 1:
+                return True
 
     # Vertical
+    print("{0: 049b}".format(position))
     m = position & (position >> 1)
-    if m & (m >> 1):
-        return True
+    t = m & (m >> 1)
+    if t:
+        bits = "{0: 049b}".format(t)
+        foo = [len(bits) - i  for i in range(0, len(bits)) if bits[i] == '1']
+        opp_pos = mask ^ position
+        print("{0: 049b}".format(opp_pos))
+        for j in range(len(foo)):
+            if foo[j] >= 2 and ((opp_pos >> int(foo[j] - 2)) & 1) != 1:
+                return True
 
     # Nothing found
     return False
 
 #TODO:
-def connected_two(position: int) -> bool:
+def connected_two(position: int, mask: int ) -> bool:
     """
     Return True, when the player has connected 2
     Arguments:

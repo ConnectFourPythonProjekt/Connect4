@@ -1,6 +1,5 @@
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
-
 import numpy as np
 from typing import Optional, Callable
 
@@ -10,8 +9,7 @@ from agents.agents_random import generate_move
 from agents.agents_minimax import minimax
 from agents.agents_minimax import minimax_gen_move
 from agents.agents_montecarlo.monte_carlo import Node, generate_move_montecarlo, get_position_mask_bitmap, \
-    connected_four, PERIOD_OF_TIME
-import agents.agents_montecarlo.monte_carlo as mcs
+    connected_four, connected_three, connected_two, number_of_connected
 from agents.agents_montecarlo_heuristic.monte_carlo_heuristic import generate_move_MCH
 
 
@@ -79,48 +77,50 @@ def human_vs_agent(
 
 
 def play():
-    # try:
-        board_copy = common.initialize_game_state()
-        while True:
-            move, ss = generate_move_montecarlo(board_copy, BoardPiece(1), None)
-            common.apply_player_action(board_copy, move, BoardPiece(1), False)
-            p, m = get_position_mask_bitmap(1, board_copy)
-            if m == 562949953421311:
-                return 0
-            if connected_four(p):
-                return 1
-            random, sss = generate_move_MCH(board_copy, BoardPiece(2), None)
-            common.apply_player_action(board_copy, random, BoardPiece(2), False)
-            p1, m1 = get_position_mask_bitmap(2, board_copy)
-            if connected_four(p1):
-                return -1
-
-            if m1 == 562949953421311:
-                return 0
-    # except:
-    #     return 0
+    board_copy = common.initialize_game_state()
+    while True:
+        move, ss = generate_move_montecarlo(board_copy, BoardPiece(1), None)
+        common.apply_player_action(board_copy, move, BoardPiece(1), False)
+        p, m = get_position_mask_bitmap(1, board_copy)
+        if m == 562949953421311:
+            return 0
+        if connected_four(p):
+            return 1
+        random, sss = generate_move_MCH(board_copy, BoardPiece(2), None)
+        common.apply_player_action(board_copy, random, BoardPiece(2), False)
+        p1, m1 = get_position_mask_bitmap(2, board_copy)
+        if connected_four(p1):
+            return -1
+        if m1 == 562949953421311:
+            return 0
 
 
 if __name__ == '__main__':
-    human_vs_agent(generate_move_montecarlo)
+    #human_vs_agent(generate_move_montecarlo)
     # root = Node()
-    # board = np.zeros((6, 7))
-    # board[0, 0:7] = [1, 1, 2, 1, 1, 1, 2]
-    # board[1, 0:7] = [2, 1, 2, 1, 0, 1, 1]
-    # board[2, 0:7] = [1, 2, 0, 0, 0, 0, 1]
-    # board[3, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    # board[4, 0:7] = [0, 0, 0, 0, 0, 0, 2]
-    # board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board = np.zeros((6, 7))
+    board[0, 0:7] = [1, 0, 0, 2, 2, 0, 0]
+    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 0]
+    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [1, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [1, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [2, 0, 0, 0, 0, 0, 0]
+    print(common.pretty_print_board(board))
+    p, m = get_position_mask_bitmap(1, board)
+    pd, md = get_position_mask_bitmap(2, board)
+    print("{0: 049b}".format(m))
+    print(connected_three(p ,m))
+    #
+    # print("{0: 049b}".format(p))
+    # print("{0: 049b}".format(pd))
+    # print("{0: 049b}".format(p & (p >> 1)))
+    v = p & (p >> 1)
+    # print("{0: 049b}".format(v & (v >> 1)))
+    bre = v & (v >> 1)
+    bits = "{0: 049b}".format(v & (v >> 1))
+    foo = [len(bits)-i-1 for i in range(0, len(bits)) if bits[i] == '1']
+    # print(foo)
 
-    # board = np.zeros((6, 7))
-    # board[0, 0:7] = [1, 1, 2, 1, 1, 1, 2]
-    # board[1, 0:7] = [2, 0, 2, 0, 2, 1, 1]
-    # board[2, 0:7] = [1, 0, 0, 0, 2, 1, 1]
-    # board[3, 0:7] = [1, 0, 0, 0, 1, 2, 1]
-    # board[4, 0:7] = [2, 0, 0, 0, 2, 1, 2]
-    # board[5, 0:7] = [0, 0, 0, 0, 2, 0, 2]
-    # print(generate_move_montecarlo(board,1,None))
-    # print(common.pretty_print_board(board))
 
     # with ThreadPoolExecutor(max_workers=8) as executor:
     #     win_1 = 0
@@ -142,4 +142,3 @@ if __name__ == '__main__':
     #     print("Winns for pure Monte Carlo agent: ", win_1)
     #     print("Winns for  heuristic Monte Carlo agent: ", win_2)
     #     print("Draws: ", draw)
-
