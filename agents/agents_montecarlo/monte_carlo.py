@@ -211,12 +211,11 @@ def evaluate(node: Node, opponent: BoardPiece, board: np.ndarray) -> int:
     """
     pos_opp, m = get_position_mask_bitmap(opponent, node.board_state)   # position after the move
     pos_player, m = get_position_mask_bitmap(node.player, board)    # other player position before the move
-    pos_player_block, m = get_position_mask_bitmap(node.player, node.board_state)    # position after the move
+    pos_player_block, m = get_position_mask_bitmap(opponent, node.board_state)    # position after the move
 
     if connected_four(pos_opp):
         return 20000
     # check after the move if we blocked the other player
-    # TODO: te pak shte sa si connected 3 ama nqma da ima prazno mqsto. s tazi prowerka ne stawa
     elif number_of_connected(pos_player, m) == 3 and number_of_connected(pos_player_block, m) != 3:
         return 10000
     else:
@@ -406,6 +405,7 @@ def connected_three(position: int, mask: int) -> bool:
     m = position & (position >> 6)
     if m & (m >> 6):
         return True
+
     # Horizontal
     m = position & (position >> 7)
     b = m & (m >> 7)
@@ -422,18 +422,15 @@ def connected_three(position: int, mask: int) -> bool:
                 return True
 
     # Vertical
-    print("{0: 049b}".format(position))
     m = position & (position >> 1)
     t = m & (m >> 1)
     if t:
         bits = "{0: 049b}".format(t)
-        foo = [len(bits) - i  for i in range(0, len(bits)) if bits[i] == '1']
+        foo = [len(bits) - i for i in range(0, len(bits)) if bits[i] == '1']
         opp_pos = mask ^ position
-        print("{0: 049b}".format(opp_pos))
         for j in range(len(foo)):
             if foo[j] >= 2 and ((opp_pos >> int(foo[j] - 2)) & 1) != 1:
                 return True
-
     # Nothing found
     return False
 

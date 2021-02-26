@@ -96,12 +96,12 @@ def play():
 
 
 if __name__ == '__main__':
-    #human_vs_agent(generate_move_montecarlo)
+    human_vs_agent(generate_move_montecarlo)
     # root = Node()
     board = np.zeros((6, 7))
     board[0, 0:7] = [1, 0, 0, 2, 2, 0, 0]
-    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 0]
-    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 0]
+    board[1, 0:7] = [2, 0, 0, 2, 0, 0, 0]
+    board[2, 0:7] = [1, 0, 0, 2, 0, 0, 0]
     board[3, 0:7] = [1, 0, 0, 0, 0, 0, 0]
     board[4, 0:7] = [1, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [2, 0, 0, 0, 0, 0, 0]
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     p, m = get_position_mask_bitmap(1, board)
     pd, md = get_position_mask_bitmap(2, board)
     print("{0: 049b}".format(m))
-    print(connected_three(p ,m))
+    print(connected_three(pd ,m))
     #
     # print("{0: 049b}".format(p))
     # print("{0: 049b}".format(pd))
