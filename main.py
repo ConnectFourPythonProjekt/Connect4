@@ -96,30 +96,19 @@ def play():
 
 
 if __name__ == '__main__':
-    human_vs_agent(generate_move_montecarlo)
+    # human_vs_agent(generate_move_montecarlo)
     # root = Node()
     board = np.zeros((6, 7))
-    board[0, 0:7] = [1, 0, 0, 2, 2, 0, 0]
-    board[1, 0:7] = [2, 0, 0, 2, 0, 0, 0]
-    board[2, 0:7] = [1, 0, 0, 2, 0, 0, 0]
-    board[3, 0:7] = [1, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [1, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [2, 0, 0, 0, 0, 0, 0]
+    board[0, 0:7] = [0, 0, 1, 1, 2, 2, 1]
+    board[1, 0:7] = [0, 0, 0, 2, 2, 1, 0]
+    board[2, 0:7] = [0, 0, 0, 1, 1, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     print(common.pretty_print_board(board))
-    p, m = get_position_mask_bitmap(1, board)
-    pd, md = get_position_mask_bitmap(2, board)
-    print("{0: 049b}".format(m))
-    print(connected_three(pd ,m))
-    #
-    # print("{0: 049b}".format(p))
-    # print("{0: 049b}".format(pd))
-    # print("{0: 049b}".format(p & (p >> 1)))
-    v = p & (p >> 1)
-    # print("{0: 049b}".format(v & (v >> 1)))
-    bre = v & (v >> 1)
-    bits = "{0: 049b}".format(v & (v >> 1))
-    foo = [len(bits)-i-1 for i in range(0, len(bits)) if bits[i] == '1']
-    # print(foo)
+    p,m = get_position_mask_bitmap(1, board)
+    print(connected_three(p, m))
+
 
 
     # with ThreadPoolExecutor(max_workers=8) as executor:

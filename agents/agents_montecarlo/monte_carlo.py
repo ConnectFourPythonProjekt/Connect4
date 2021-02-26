@@ -227,6 +227,7 @@ def evaluate_board(position: int, mask: int) -> int:
     Evaluate board according to bit position
     Arguments:
          position: bit representation of board and where the player has piece
+         mask: bit representation of board with all pieces
     Return:
         int: value of the board
     """
@@ -386,25 +387,53 @@ def connected_four(position) -> bool:
     # Nothing found
     return False
 
-#TODO:
+
 def connected_three(position: int, mask: int) -> bool:
     """
     Return True, when the player has connected 3
     Arguments:
         position: bit representation of the board with players pieces
+        mask: bit representation of board with all pieces
     Return:
         bool: True for 3 connected
     """
 
     # Diagonal /
+    print("{0: 049b}".format(position))
+    print("{0: 049b}".format(mask))
     m = position & (position >> 8)
-    if m & (m >> 8):
-        return True
+    a = m & (m >> 8)
+    if a:
+        bits = "{0: 049b}".format(a)
+        # print("{0: 049b}".format(a))
+        foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
+        opp_pos = mask ^ position
+        for j in range(len(foo)):
+            if foo[j] < 8:
+                if ((opp_pos >> int(foo[j] + 24)) & 1) != 1:
+                    print(((opp_pos >> int(foo[j] - 8)) & 1))
+                    return True
+                else:
+                    break
+            elif ((opp_pos >> int(foo[j] - 8)) & 1) != 1 or (((opp_pos >> int(foo[j] + 24)) & 1) != 1 and (opp_pos >> int(foo[j] + 24)) != 0):
+                return True
 
     # Diagonal \
+
     m = position & (position >> 6)
-    if m & (m >> 6):
-        return True
+    c = m & (m >> 6)
+    if c:
+        bits = "{0: 049b}".format(c)
+        foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
+        opp_pos = mask ^ position
+        for j in range(len(foo)):
+            if foo[j] < 12:
+                if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and (opp_pos >> int(foo[j] + 12)) > 0:
+                    return True
+                else:
+                    break
+            elif (((opp_pos >> int(foo[j] + 12)) & 1) != 1 and (opp_pos >> int(foo[j] + 12)) != 0 ) or ((opp_pos >> int(foo[j] - 12)) & 1) != 1:
+                return True
 
     # Horizontal
     m = position & (position >> 7)
@@ -415,10 +444,10 @@ def connected_three(position: int, mask: int) -> bool:
         opp_pos = mask ^ position
         for j in range(len(foo)):
             if foo[j] < 14:
-                if ((opp_pos >> int(foo[j] + 14)) & 1) != 1:
+                if ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and (opp_pos >> int(foo[j] + 14)) != 0:
                     return True
                 else: break
-            elif((opp_pos >> int(foo[j] + 14)) & 1) != 1 or ((opp_pos >> int(foo[j] - 14)) & 1) != 1:
+            elif(((opp_pos >> int(foo[j] + 14)) & 1) and (opp_pos >> int(foo[j] + 14)) != 0) != 1 or ((opp_pos >> int(foo[j] - 14)) & 1) != 1:
                 return True
 
     # Vertical
@@ -440,6 +469,7 @@ def connected_two(position: int, mask: int ) -> bool:
     Return True, when the player has connected 2
     Arguments:
         position: bit representation of the board with players pieces
+        mask: bit representation of board with all pieces
     Return:
         bool: True for 2 connected
     """
