@@ -29,7 +29,7 @@ class Node:
         new_node.parent = self
 
     def __repr__(self):
-        return f' Move: {self.move} Wins: {self.wins} Simulation: {self.simulations}'
+        return f' Move: {self.move} Wins: {self.wins} Simulation: {self.simulations} value: {self.value}'
 
 
 class Tree:
@@ -84,8 +84,7 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
         if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
     # find child with best move
-    win_rates = {child.move: child.value
-                 for child in root.children}
+    win_rates = {child.move: child.value for child in root.children}
     return max(win_rates, key=win_rates.get)
 
 
@@ -211,12 +210,12 @@ def evaluate(node: Node, opponent: BoardPiece, board_before: np.ndarray) -> int:
     """
     pos_opp, m1 = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
     pos_player, m2 = get_position_mask_bitmap(node.player, board_before)  # other player position before the move
-    pos_player_block, m3 = get_position_mask_bitmap(opponent, node.board_state)  # position after the move
+    pos_player_block, m3 = get_position_mask_bitmap(node.player, node.board_state)  # position after the move
 
     if connected_four(pos_opp):
         return 200000
     # check after the move if we blocked the other player
-    elif number_of_connected(pos_player, m2) == 3 and number_of_connected(pos_player_block, m3) != 3:
+    elif connected_three(pos_player, m2) and not connected_three(pos_player_block, m3):
         return 100000
     else:
         return evaluate_board(pos_opp, m1)
@@ -406,7 +405,7 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(m & (m >> 8))
         foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and ((opp_pos >> int(foo[j] + 24)) & 1) != 0:
+            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and foo[j] + 24 < 49:
                 return True
             elif foo[j] >= 8 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1:
                 return True
@@ -417,7 +416,7 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(m & (m >> 6))
         foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and (opp_pos >> int(foo[j] + 12)) > 0:
+            if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and foo[j] + 12 < 49:
                 return True
             elif foo[j] >= 12 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1:
                 return True
@@ -429,7 +428,7 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(b)
         foo = [len(bits) - i - 1 + 7 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and (opp_pos >> int(foo[j] + 14)) != 0:
+            if ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and foo[j] + 14 < 49:
                 return True
             elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1:
                 return True
@@ -455,20 +454,24 @@ def connected_two(position: int, mask: int) -> bool:
         position: bit representation of the board with players pieces
         mask: bit representation of board with all pieces
     Return:
-        bool: True for 2 connected
+        Tuple[bool,bool] = first value is true when player has 2 connected and 2 spaces after/before them,
+                            second value is true when player has 2 connected, free space and one more piece (X X _ X)
     """
 
     opp_pos = mask ^ position
-
     # Diagonal /
     tmp = position & (position >> 8)
     if tmp:
         bits = "{0: 049b}".format(tmp)
         foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and ((opp_pos >> int(foo[j] + 32)) & 1) != 1:
+            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and ((opp_pos >> int(foo[j] + 32)) & 1) != 1 \
+                    and foo[j] + 24 < 49 and foo[j] + 32 < 49:
                 return True
             elif foo[j] >= 16 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1 and ((opp_pos >> int(foo[j] - 16)) & 1) != 1:
+                return True
+            elif ((opp_pos >> int(foo[j] + 16)) & 1) != 1 and foo[j] + 16 < 49 and foo[j] >= 16 \
+                    and ((opp_pos >> int(foo[j] - 16)) & 1) != 1:
                 return True
 
     # Diagonal \
@@ -477,7 +480,8 @@ def connected_two(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(tmp)
         foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 6)) & 1) != 1 and ((opp_pos >> int(foo[j] + 12)) & 1) != 1:
+            if ((opp_pos >> int(foo[j] + 6)) & 1) != 1 and ((opp_pos >> int(foo[j] + 12)) & 1) != 1 \
+                    and foo[j] + 6 < 49 and foo[j] + 12 < 49:
                 return True
             elif foo[j] >= 18 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and ((opp_pos >> int(foo[j] - 18)) & 1) != 1:
                 return True
@@ -488,12 +492,13 @@ def connected_two(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(tmp)
         foo = [len(bits) - i - 1 + 7 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 7)) & 1) != 1 and (opp_pos >> int(foo[j] + 7)) != 0 and \
-                    ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and (opp_pos >> int(foo[j] + 14)) != 0 :
+            if ((opp_pos >> int(foo[j] + 7)) & 1) != 1 and foo[j] + 7 <= 49 and \
+                    ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and foo[j] + 14 < 49:
                 return True
             elif foo[j] >= 21 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1 and ((opp_pos >> int(foo[j] - 21)) & 1) != 1:
                 return True
-            elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1 and ((opp_pos >> int(foo[j] + 7)) & 1) != 1:
+            elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1 and ((opp_pos >> int(foo[j] + 7)) & 1) != 1 \
+                    and foo[j] + 7 < 49:
                 return True
 
     # Vertical

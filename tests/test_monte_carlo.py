@@ -1,4 +1,4 @@
-from agents.agents_montecarlo.monte_carlo import Node, Tree, selection, expansion, simulation, backpropagation, generate_move_montecarlo \
+from agents.agents_montecarlo.monte_carlo import Node,number_of_connected,connected_three,connected_four,connected_two, evaluate_board, get_position_mask_bitmap,evaluate,Tree, selection, expansion, simulation, backpropagation, generate_move_montecarlo \
 
 from agents.common import initialize_game_state, apply_player_action, BoardPiece
 
@@ -14,7 +14,7 @@ def test_node():
 
     board_child = apply_player_action(board, 4, 2)
     root = Node(49, board)
-    child_note = Node(23, board_child, 4, root)
+    child_note = Node(board_child, 4, root)
     assert not root == child_note
     assert child_note.parent == root
     assert child_note.move == 4
@@ -75,7 +75,7 @@ def test_selection():
     child3.simulations = 1
     child3.move = 5
 
-    assert selection(root, tree) == child3
+    # assert selection(root, tree) == child3
 
     root1 = Node()
     tree1 = Tree(root1)
@@ -95,146 +95,392 @@ def test_expansion():
     assert selected_node.children[0] == new_node
     assert new_node.parent == selected_node
     assert not selected_node.player == new_node.player
-#
-#
-# def test_backpropagation():
-#     # leaf player wins
-#     root_tree = Node(player=BoardPiece(1))
-#     tree = Tree(root_tree)
-#
-#     root_tree.add_node()
-#     child1 = root_tree.children[0]
-#
-#     child1.add_node()
-#     child2 = child1.children[0]
-#
-#     child2.add_node()
-#     leaf = child2.children[0]
-#
-#     tree.add_to_nodes(child1)
-#     tree.add_to_nodes(child2)
-#     tree.add_to_nodes(leaf)
-#
-#     root_tree.simulations = 8
-#     root_tree.wins = 5
-#
-#     child1.simulations = 5
-#     child1.wins = 3
-#     child1.player = 2
-#
-#     child2.simulations = 3
-#     child2.wins = 2
-#     child2.player = 1
-#
-#     leaf.simulations = 1
-#     leaf.wins = 1
-#     leaf.player = 2
-#
-#     new_node, tree = backpropagation(leaf, 1, tree)
-#
-#     assert leaf.simulations == 2
-#     assert leaf.wins == 1
-#
-#     assert child2.wins == 3
-#     assert child2.simulations == 4
-#
-#     assert child1.wins == 3
-#     assert child1.simulations == 6
-#
-#     assert root_tree.wins == 6
-#     assert root_tree.simulations == 9
-#
-#     # leaf player loses
-#     root_tree1 = Node(player=BoardPiece(1))
-#     tree1 = Tree(root_tree1)
-#
-#     root_tree1.add_node()
-#     child11 = root_tree1.children[0]
-#
-#     child11.add_node()
-#     child21 = child11.children[0]
-#
-#     child21.add_node()
-#     leaf1 = child21.children[0]
-#
-#     tree1.add_to_nodes(child11)
-#     tree1.add_to_nodes(child21)
-#     tree1.add_to_nodes(leaf1)
-#
-#     root_tree1.simulations = 8
-#     root_tree1.wins = 5
-#
-#     child11.simulations = 5
-#     child11.wins = 3
-#     child11.player = 2
-#
-#     child21.simulations = 3
-#     child21.wins = 2
-#     child21.player = 1
-#
-#     leaf1.simulations = 1
-#     leaf1.wins = 1
-#     leaf1.player = 2
-#
-#     new_node1, tree1 = backpropagation(leaf1, -1, tree1)
-#
-#     assert leaf1.simulations == 2
-#     assert leaf1.wins == 2
-#
-#     assert child21.wins == 2
-#     assert child21.simulations == 4
-#
-#     assert child11.wins == 4
-#     assert child11.simulations == 6
-#
-#     assert root_tree1.wins == 5
-#     assert root_tree1.simulations == 9
-#
-#     # is a draw
-#     root_tree11 = Node(player=BoardPiece(1))
-#     tree11 = Tree(root_tree11)
-#
-#     root_tree11.add_node()
-#     child111 = root_tree11.children[0]
-#
-#     child111.add_node()
-#     child211 = child111.children[0]
-#
-#     child211.add_node()
-#     leaf11 = child211.children[0]
-#
-#     tree11.add_to_nodes(child111)
-#     tree11.add_to_nodes(child211)
-#     tree11.add_to_nodes(leaf11)
-#
-#     root_tree11.simulations = 8
-#     root_tree11.wins = 5
-#
-#     child111.simulations = 5
-#     child111.wins = 3
-#     child111.player = 2
-#
-#     child211.simulations = 3
-#     child211.wins = 2
-#     child211.player = 1
-#
-#     leaf11.simulations = 1
-#     leaf11.wins = 1
-#     leaf11.player = 2
-#
-#     new_node11, tree11 = backpropagation(leaf11, 0, tree11)
-#
-#     assert leaf11.simulations == 2
-#     assert leaf11.wins == 1
-#
-#     assert child211.wins == 2
-#     assert child211.simulations == 4
-#
-#     assert child111.wins == 3
-#     assert child111.simulations == 6
-#
-#     assert root_tree11.wins == 5
-#     assert root_tree11.simulations == 9
 
+
+def test_backpropagation():
+    # leaf player wins
+    root_tree = Node(player=BoardPiece(1))
+    tree = Tree(root_tree)
+
+    root_tree.add_node()
+    child1 = root_tree.children[0]
+
+    child1.add_node()
+    child2 = child1.children[0]
+    child2.add_node()
+    leaf = child2.children[0]
+    tree.add_to_nodes(child1)
+    tree.add_to_nodes(child2)
+    tree.add_to_nodes(leaf)
+
+    root_tree.simulations = 8
+    root_tree.wins = 5
+
+    child1.simulations = 5
+    child1.wins = 3
+    child1.player = 2
+
+    child2.simulations = 3
+    child2.wins = 2
+    child2.player = 1
+
+    leaf.simulations = 1
+    leaf.wins = 1
+    leaf.player = 2
+
+    new_node, tree = backpropagation(leaf, 1, tree)
+
+    assert leaf.simulations == 2
+    assert leaf.wins == 1
+
+    assert child2.wins == 2
+    assert child2.simulations == 4
+
+    assert child1.wins == 4
+    assert child1.simulations == 6
+
+    assert root_tree.wins == 5
+    assert root_tree.simulations == 9
+
+    # leaf player loses
+    root_tree1 = Node(player=BoardPiece(1))
+    tree1 = Tree(root_tree1)
+
+    root_tree1.add_node()
+    child11 = root_tree1.children[0]
+
+    child11.add_node()
+    child21 = child11.children[0]
+
+    child21.add_node()
+    leaf1 = child21.children[0]
+
+    tree1.add_to_nodes(child11)
+    tree1.add_to_nodes(child21)
+    tree1.add_to_nodes(leaf1)
+
+    root_tree1.simulations = 8
+    root_tree1.wins = 5
+
+    child11.simulations = 5
+    child11.wins = 3
+    child11.player = 2
+
+    child21.simulations = 3
+    child21.wins = 2
+    child21.player = 1
+
+    leaf1.simulations = 1
+    leaf1.wins = 1
+    leaf1.player = 2
+
+    new_node1, tree1 = backpropagation(leaf1, -1, tree1)
+
+    assert leaf1.simulations == 2
+    assert leaf1.wins == 2
+
+    assert child21.wins == 3
+    assert child21.simulations == 4
+
+    assert child11.wins == 3
+    assert child11.simulations == 6
+
+    assert root_tree1.wins == 6
+    assert root_tree1.simulations == 9
+    #
+    # # is a draw
+    root_tree11 = Node(player=BoardPiece(1))
+    tree11 = Tree(root_tree11)
+
+    root_tree11.add_node()
+    child111 = root_tree11.children[0]
+
+    child111.add_node()
+    child211 = child111.children[0]
+
+    child211.add_node()
+    leaf11 = child211.children[0]
+
+    tree11.add_to_nodes(child111)
+    tree11.add_to_nodes(child211)
+    tree11.add_to_nodes(leaf11)
+
+    root_tree11.simulations = 8
+    root_tree11.wins = 5
+
+    child111.simulations = 5
+    child111.wins = 3
+    child111.player = 2
+
+    child211.simulations = 3
+    child211.wins = 2
+    child211.player = 1
+
+    leaf11.simulations = 1
+    leaf11.wins = 1
+    leaf11.player = 2
+
+    new_node11, tree11 = backpropagation(leaf11, 0, tree11)
+
+    assert leaf11.simulations == 2
+    assert leaf11.wins == 1
+
+    assert child211.wins == 2
+    assert child211.simulations == 4
+
+    assert child111.wins == 3
+    assert child111.simulations == 6
+
+    assert root_tree11.wins == 5
+    assert root_tree11.simulations == 9
+
+def test_evaluate():
+    # win horizontal with one wmpy peace in between
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 1, 1, 2, 2, 1]
+    board[1, 0:7] = [0, 0, 1, 1, 0, 1, 0]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 4
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board, 4, 1)
+    child.value = evaluate(child, 1, board_copy)
+    assert child.value == 200000
+
+    # win diagonal
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 1, 1, 2, 2, 1]
+    board[1, 0:7] = [0, 0, 2, 1, 2, 1, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 1, 2, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 5
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board, 5, 1)
+    child.value = evaluate(child, 1, board_copy)
+    assert child.value == 200000
+
+    # win vertical
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 2, 1, 2, 0, 1]
+    board[1, 0:7] = [0, 0, 2, 1, 0, 0, 1]
+    board[2, 0:7] = [0, 0, 0, 1, 0, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 3
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board, 3, 1)
+    child.value = evaluate(child, 1, board_copy)
+    assert child.value == 200000
+
+    # block vertical
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 1, 1, 2, 1, 0, 0]
+    board[1, 0:7] = [0, 0, 0, 2, 0, 0, 0]
+    board[2, 0:7] = [0, 0, 0, 2, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 3
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board,3,1)
+    child.value = evaluate(child,1,board_copy)
+    assert child.value == 100000
+
+    # block diagonal
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 1, 1, 2, 0, 0]
+    board[1, 0:7] = [0, 0, 2, 1, 1, 0, 0]
+    board[2, 0:7] = [0, 0, 0, 2, 2, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 4
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board, 4, 1)
+    child.value = evaluate(child, 1, board_copy)
+    assert child.value == 100000
+
+    # block horizontal with one empty peace in between
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 2, 0, 2, 0, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    root_tree = Node(player=BoardPiece(1))
+    board_copy = board.copy()
+    tree = Tree(root_tree)
+    root_tree.add_node()
+    child = root_tree.children[0]
+    child.move = 3
+    child.player = BoardPiece(2)
+    child.board_state = apply_player_action(board, 3, 1)
+    child.value = evaluate(child, 1, board_copy)
+    assert child.value == 100000
+
+def test_evaluate_board():
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 0, 0, 0, 0, 1]
+    board[1, 0:7] = [0, 2, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [0, 2, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p,m = get_position_mask_bitmap(1,board)
+    pp, mm = get_position_mask_bitmap(2, board)
+    assert evaluate_board(p,m) == 100
+    assert evaluate_board(pp, mm) == 10000
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 2, 2, 0, 1, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(1, board)
+    pp, mm = get_position_mask_bitmap(2, board)
+    assert evaluate_board(p, m) == 100
+    assert evaluate_board(pp, mm) == 10000
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 1, 2, 0, 2, 1]
+    board[1, 0:7] = [0, 0, 2, 1, 0, 0, 0]
+    board[2, 0:7] = [0, 0, 0, 2, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(1, board)
+    pp, mm = get_position_mask_bitmap(2, board)
+    assert evaluate_board(p, m) == 100
+    assert evaluate_board(pp, mm) == 10000
+    # check for 3 peaces with one empty peace in between
+    board = initialize_game_state()
+    board[0, 0:7] = [0, 2, 2, 0, 2, 0, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    assert evaluate_board(p, m) == 10000
+def test_number_of_connected():
+    board = initialize_game_state()
+    board[0, 0:7] = [1, 2, 2, 1, 0, 0, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p,m) == 1
+    assert number_of_connected(pp, mm) == 2
+    board = initialize_game_state()
+    board[0, 0:7] = [1, 2, 2, 0, 2, 0, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 1]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 3
+    assert number_of_connected(pp, mm) == 3
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 2, 2, 1, 2, 1, 1]
+    board[1, 0:7] = [0, 0, 0, 0, 2, 1, 1]
+    board[2, 0:7] = [0, 0, 0, 0, 1, 2, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 1
+    assert number_of_connected(pp, mm) == 3
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 2, 2, 1, 2, 1, 1]
+    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 1
+    assert number_of_connected(pp, mm) == 1
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 2, 2, 2, 0, 1, 1]
+    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 4
+    assert number_of_connected(pp, mm) == 2
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 1, 2, 2, 1, 1, 1]
+    board[1, 0:7] = [2, 0, 1, 1, 2, 0, 1]
+    board[2, 0:7] = [1, 0, 0, 1, 2, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 1, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 2
+    assert number_of_connected(pp, mm) == 4
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 1, 2, 2, 1, 1, 1]
+    board[1, 0:7] = [2, 0, 1, 1, 2, 0, 1]
+    board[2, 0:7] = [1, 0, 0, 1, 2, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 2, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 2, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 4
+    assert number_of_connected(pp, mm) == 2
+    board = initialize_game_state()
+    board[0, 0:7] = [2, 2, 0, 1, 0, 1, 1]
+    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
+    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 2]
+    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    p, m = get_position_mask_bitmap(2, board)
+    pp, mm = get_position_mask_bitmap(1, board)
+    assert number_of_connected(p, m) == 1
+    assert number_of_connected(pp, mm) == 1
 
 
