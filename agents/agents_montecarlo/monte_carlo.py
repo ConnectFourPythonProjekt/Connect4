@@ -12,32 +12,77 @@ PERIOD_OF_TIME = 3  # in sec; set the timer
 
 
 class Node:
+    """
+    A class used to represent a node
+
+    Attributes:
+        board_state: np.ndarray saved board with the move of the node
+        move: int first move made by the child in the simulation
+        parent: node parent of the node
+        player: BoardPiece the player of the node
+
+    Methods:None
+    """
+
     def __init__(self, board_state=None, move=None, parent=None, player=None):
-        self.children = []
+        """
+        Node initialization
+        Parameters:
+            board_state: np.ndarray saved board with the move of the node
+            move: int first move made by the child in the simulation
+            parent: node parent of the node
+            player: BoardPiece the player of the node
+        """
+        self.children = []  # list with all children of the node
         self.board_state = board_state
         self.move = move
         self.parent = parent
-        self.simulations = 0
-        self.wins = 0
+        self.simulations = 0    # number of simulations
+        self.wins = 0           # number of wins
         self.player = player
-        self.value = 0
+        self.value = 0          # value is based on how good the move of the node is
         self.explored = False  # when True node can't be selected in selection
 
     def add_node(self):
+        """
+        Creates a new child and adds it to the list of children of given node
+        Parameters: None
+        """
         new_node = Node()
         self.children.append(new_node)
         new_node.parent = self
 
     def __repr__(self):
+        """
+        Represents the move, wins, simulations and value as strings of the given node
+        Parameters: None
+        """
         return f' Move: {self.move} Wins: {self.wins} Simulation: {self.simulations} value: {self.value}'
 
 
 class Tree:
+    """
+    A class used to represent the tree
+
+    Attributes
+        root: node the root node of the tree
+    Methods: None
+    """
     def __init__(self, root: Node):
+        """
+        Initializes the tree
+        Parameters:
+            root: node the root node of the tree
+        """
         self.nodes = []
         self.root = root
 
     def add_to_nodes(self, node: Node):
+        """
+        Adds a child to the tree
+        Attributes:
+            node: node the child to be added to the tree
+        """
         self.nodes.append(node)
 
 
@@ -165,7 +210,7 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
         newly_created_node.explored = True  # this node cant be explored further
         return FULL
 
-    # set nodes value and move
+    # set nodes value, move and board
     newly_created_node.move = move
     board_before = board.copy()
     newly_created_node.board_state = apply_player_action(board, move, opponent, False)
@@ -204,7 +249,7 @@ def evaluate(node: Node, opponent: BoardPiece, board_before: np.ndarray) -> int:
     Arguments:
         node: selected node
         opponent: actually current player
-        board: ndarray representation of the board
+        board_before: ndarray representation of the board before the move
     Return
         int: nodes value after the move
     """
@@ -298,6 +343,7 @@ def valid_move(board: np.ndarray, player: BoardPiece, node: None) -> int:
     if node and len(node.parent.children) > 1:
         invalid_moves = [item.move for item in node.parent.children]
 
+    # create list with next possible moves
     actionList = [col for col in range(7) if np.count_nonzero(board[:, col] == 0) > 0 and col not in invalid_moves]
 
     return random.choice(actionList) if len(actionList) > 0 else None
@@ -405,9 +451,9 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(m & (m >> 8))
         foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and foo[j] + 24 < 49:
+            if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and foo[j] + 24 < 49:  # one piece before
                 return True
-            elif foo[j] >= 8 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1:
+            elif foo[j] >= 8 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1:  # one piece after
                 return True
 
     # Diagonal \
@@ -416,9 +462,9 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(m & (m >> 6))
         foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and foo[j] + 12 < 49:
+            if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and foo[j] + 12 < 49:  # one piece before
                 return True
-            elif foo[j] >= 12 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and foo[j] - 12 % 6 == 0:
+            elif foo[j] >= 12 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and foo[j] - 12 % 6 == 0:  # one piece after
                 return True
 
     # Horizontal
@@ -428,9 +474,9 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(b)
         foo = [len(bits) - i - 1 + 7 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and foo[j] + 14 < 49:
+            if ((opp_pos >> int(foo[j] + 14)) & 1) != 1 and foo[j] + 14 < 49:  # one piece before
                 return True
-            elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1:
+            elif foo[j] >= 14 and ((opp_pos >> int(foo[j] - 14)) & 1) != 1:  # one piece after
                 return True
 
     # Vertical
@@ -440,7 +486,7 @@ def connected_three(position: int, mask: int) -> bool:
         bits = "{0: 049b}".format(t)
         foo = [len(bits) - i for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
-            if foo[j] >= 2 and ((opp_pos >> int(foo[j] - 2)) & 1) != 1:
+            if foo[j] >= 2 and ((opp_pos >> int(foo[j] - 2)) & 1) != 1:  # one piece after
                 return True
 
     # Nothing found

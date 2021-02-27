@@ -11,6 +11,7 @@ PLAYER2 = BoardPiece(2)  # board[i, j] == PLAYER2 where player 2 has a piece
 PlayerAction = np.int8  # The column to be played
 BOARD_BEFORE = np.ndarray
 
+
 class GameState(Enum):
     IS_WIN = 1
     IS_DRAW = -1

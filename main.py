@@ -10,7 +10,6 @@ from agents.agents_minimax import minimax
 from agents.agents_minimax import minimax_gen_move
 from agents.agents_montecarlo.monte_carlo import Node, generate_move_montecarlo, get_position_mask_bitmap, \
     connected_four, connected_three, connected_two, number_of_connected
-from agents.agents_montecarlo_heuristic.monte_carlo_heuristic import generate_move_MCH
 
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
@@ -76,60 +75,6 @@ def human_vs_agent(
                     break
 
 
-def play():
-    board_copy = common.initialize_game_state()
-    while True:
-        move, ss = generate_move_montecarlo(board_copy, BoardPiece(1), None)
-        common.apply_player_action(board_copy, move, BoardPiece(1), False)
-        p, m = get_position_mask_bitmap(1, board_copy)
-        if m == 562949953421311:
-            return 0
-        if connected_four(p):
-            return 1
-        random, sss = generate_move_MCH(board_copy, BoardPiece(2), None)
-        common.apply_player_action(board_copy, random, BoardPiece(2), False)
-        p1, m1 = get_position_mask_bitmap(2, board_copy)
-        if connected_four(p1):
-            return -1
-        if m1 == 562949953421311:
-            return 0
-
-
 if __name__ == '__main__':
-    #human_vs_agent(generate_move_montecarlo)
-    # root = Node()
-    board = np.zeros((6, 7))
-    board[0, 0:7] = [0, 2, 1, 1, 2, 0, 0]
-    board[1, 0:7] = [0, 0, 2, 1, 1, 0, 0]
-    board[2, 0:7] = [0, 0, 0, 2, 2, 0, 0]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    print(common.pretty_print_board(board))
-    op_p, m = get_position_mask_bitmap(2,board)
-    # print(connected_two(op_p,m))
-    print(generate_move_montecarlo(board, 1, None))
+    human_vs_agent(generate_move_montecarlo)
 
-
-
-
-    # with ThreadPoolExecutor(max_workers=8) as executor:
-    #     win_1 = 0
-    #     win_2 = 0
-    #     draw = 0
-    #     for finished_game in as_completed([
-    #         executor.submit(play)
-    #         for i in range(8)
-    #     ]):
-    #         result = finished_game.result()
-    #         print(result)
-    #         if result == 1:
-    #             win_1 += 1
-    #         if result == -1:
-    #             win_2 += 1
-    #         if result == 0:
-    #             draw += 1
-    #
-    #     print("Winns for pure Monte Carlo agent: ", win_1)
-    #     print("Winns for  heuristic Monte Carlo agent: ", win_2)
-    #     print("Draws: ", draw)

@@ -1,5 +1,5 @@
 from agents.common import BoardPiece, SavedState, PlayerAction
-from typing import Optional, Callable, Tuple
+from typing import Optional, Tuple
 import numpy as np
 import random
 
