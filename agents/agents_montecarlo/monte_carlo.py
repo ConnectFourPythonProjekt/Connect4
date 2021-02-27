@@ -128,7 +128,7 @@ def MCTS(root: Node, board: np.ndarray, tree: Tree) -> int:
             root, final_tree = backpropagation(new_node, outcome, updated_tree)
         if time.time() - tic > PERIOD_OF_TIME: break  # out of time
 
-    # find child with best move
+    # find child with best move based on the value
     win_rates = {child.move: child.value for child in root.children}
     return max(win_rates, key=win_rates.get)
 
@@ -196,7 +196,7 @@ def simulation(newly_created_node: Node, board: np.ndarray) -> int:
     Called until the game is finished (win, lost or draw)
     and return the result. When there is no valid move for the node return that the board is full.
     Arguments:
-        newly_created_node: new node
+        newly_created_node: the newly created node to be simulated
         board: ndarray representation of the board
     Return:
         int: 1 for Win, -1 for Lost, 0 for Draw and  -2 for Full when the board is full
