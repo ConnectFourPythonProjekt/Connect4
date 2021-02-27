@@ -418,7 +418,7 @@ def connected_three(position: int, mask: int) -> bool:
         for j in range(len(foo)):
             if ((opp_pos >> int(foo[j] + 12)) & 1) != 1 and foo[j] + 12 < 49:
                 return True
-            elif foo[j] >= 12 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1:
+            elif foo[j] >= 12 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and foo[j] - 12 % 6 == 0:
                 return True
 
     # Horizontal
@@ -454,8 +454,7 @@ def connected_two(position: int, mask: int) -> bool:
         position: bit representation of the board with players pieces
         mask: bit representation of board with all pieces
     Return:
-        Tuple[bool,bool] = first value is true when player has 2 connected and 2 spaces after/before them,
-                            second value is true when player has 2 connected, free space and one more piece (X X _ X)
+        bool: = value is true when player has 2 connected and 2 spaces after/before them
     """
 
     opp_pos = mask ^ position
@@ -466,12 +465,12 @@ def connected_two(position: int, mask: int) -> bool:
         foo = [len(bits) - i - 1 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
             if ((opp_pos >> int(foo[j] + 24)) & 1) != 1 and ((opp_pos >> int(foo[j] + 32)) & 1) != 1 \
-                    and foo[j] + 24 < 49 and foo[j] + 32 < 49:
+                    and foo[j] + 24 < 49 and foo[j] + 32 < 49 and foo[j] + 24 % 8 == 0 and foo[j] + 32 % 8 == 0:
                 return True
             elif foo[j] >= 16 and ((opp_pos >> int(foo[j] - 8)) & 1) != 1 and ((opp_pos >> int(foo[j] - 16)) & 1) != 1:
                 return True
             elif ((opp_pos >> int(foo[j] + 16)) & 1) != 1 and foo[j] + 16 < 49 and foo[j] >= 16 \
-                    and ((opp_pos >> int(foo[j] - 16)) & 1) != 1:
+                    and ((opp_pos >> int(foo[j] - 16)) & 1) != 1 and foo[j] + 16 % 8 == 0:
                 return True
 
     # Diagonal \
@@ -481,7 +480,7 @@ def connected_two(position: int, mask: int) -> bool:
         foo = [len(bits) - i - 1 + 6 for i in range(0, len(bits)) if bits[i] == '1']
         for j in range(len(foo)):
             if ((opp_pos >> int(foo[j] + 6)) & 1) != 1 and ((opp_pos >> int(foo[j] + 12)) & 1) != 1 \
-                    and foo[j] + 6 < 49 and foo[j] + 12 < 49:
+                    and foo[j] + 6 < 49 and foo[j] + 12 < 49 and foo[j] + 6 % 6 == 0 and foo[j] + 12 % 6 == 0:
                 return True
             elif foo[j] >= 18 and ((opp_pos >> int(foo[j] - 12)) & 1) != 1 and ((opp_pos >> int(foo[j] - 18)) & 1) != 1:
                 return True

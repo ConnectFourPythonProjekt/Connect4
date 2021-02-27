@@ -1,4 +1,6 @@
-from agents.agents_montecarlo.monte_carlo import Node,number_of_connected,connected_three,connected_four,connected_two, evaluate_board, get_position_mask_bitmap,evaluate,Tree, selection, expansion, simulation, backpropagation, generate_move_montecarlo \
+from agents.agents_montecarlo.monte_carlo import Node, number_of_connected, connected_three, connected_four, \
+    connected_two, evaluate_board, get_position_mask_bitmap, evaluate, Tree, selection, expansion, simulation, \
+    backpropagation, generate_move_montecarlo
 
 from agents.common import initialize_game_state, apply_player_action, BoardPiece
 
@@ -234,6 +236,7 @@ def test_backpropagation():
     assert root_tree11.wins == 5
     assert root_tree11.simulations == 9
 
+
 def test_evaluate():
     # win horizontal with one wmpy peace in between
     board = initialize_game_state()
@@ -307,8 +310,8 @@ def test_evaluate():
     child = root_tree.children[0]
     child.move = 3
     child.player = BoardPiece(2)
-    child.board_state = apply_player_action(board,3,1)
-    child.value = evaluate(child,1,board_copy)
+    child.board_state = apply_player_action(board, 3, 1)
+    child.value = evaluate(child, 1, board_copy)
     assert child.value == 100000
 
     # block diagonal
@@ -330,24 +333,6 @@ def test_evaluate():
     child.value = evaluate(child, 1, board_copy)
     assert child.value == 100000
 
-    # block horizontal with one empty peace in between
-    board = initialize_game_state()
-    board[0, 0:7] = [0, 2, 2, 0, 2, 0, 1]
-    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    root_tree = Node(player=BoardPiece(1))
-    board_copy = board.copy()
-    tree = Tree(root_tree)
-    root_tree.add_node()
-    child = root_tree.children[0]
-    child.move = 3
-    child.player = BoardPiece(2)
-    child.board_state = apply_player_action(board, 3, 1)
-    child.value = evaluate(child, 1, board_copy)
-    assert child.value == 100000
 
 def test_evaluate_board():
     board = initialize_game_state()
@@ -357,10 +342,11 @@ def test_evaluate_board():
     board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    p,m = get_position_mask_bitmap(1,board)
+    p, m = get_position_mask_bitmap(1, board)
     pp, mm = get_position_mask_bitmap(2, board)
-    assert evaluate_board(p,m) == 100
+    assert evaluate_board(p, m) == 100
     assert evaluate_board(pp, mm) == 10000
+
     board = initialize_game_state()
     board[0, 0:7] = [0, 2, 2, 2, 0, 1, 1]
     board[1, 0:7] = [0, 0, 0, 0, 0, 0, 0]
@@ -370,8 +356,9 @@ def test_evaluate_board():
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     p, m = get_position_mask_bitmap(1, board)
     pp, mm = get_position_mask_bitmap(2, board)
-    assert evaluate_board(p, m) == 100
+    assert evaluate_board(p, m) == 1
     assert evaluate_board(pp, mm) == 10000
+
     board = initialize_game_state()
     board[0, 0:7] = [0, 2, 1, 2, 0, 2, 1]
     board[1, 0:7] = [0, 0, 2, 1, 0, 0, 0]
@@ -383,16 +370,8 @@ def test_evaluate_board():
     pp, mm = get_position_mask_bitmap(2, board)
     assert evaluate_board(p, m) == 100
     assert evaluate_board(pp, mm) == 10000
-    # check for 3 peaces with one empty peace in between
-    board = initialize_game_state()
-    board[0, 0:7] = [0, 2, 2, 0, 2, 0, 1]
-    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    p, m = get_position_mask_bitmap(2, board)
-    assert evaluate_board(p, m) == 10000
+
+
 def test_number_of_connected():
     board = initialize_game_state()
     board[0, 0:7] = [1, 2, 2, 1, 0, 0, 1]
@@ -403,19 +382,9 @@ def test_number_of_connected():
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     p, m = get_position_mask_bitmap(2, board)
     pp, mm = get_position_mask_bitmap(1, board)
-    assert number_of_connected(p,m) == 1
+    assert number_of_connected(p, m) == 1
     assert number_of_connected(pp, mm) == 2
-    board = initialize_game_state()
-    board[0, 0:7] = [1, 2, 2, 0, 2, 0, 1]
-    board[1, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    board[2, 0:7] = [0, 0, 0, 0, 0, 0, 1]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    p, m = get_position_mask_bitmap(2, board)
-    pp, mm = get_position_mask_bitmap(1, board)
-    assert number_of_connected(p, m) == 3
-    assert number_of_connected(pp, mm) == 3
+
     board = initialize_game_state()
     board[0, 0:7] = [2, 2, 2, 1, 2, 1, 1]
     board[1, 0:7] = [0, 0, 0, 0, 2, 1, 1]
@@ -427,17 +396,7 @@ def test_number_of_connected():
     pp, mm = get_position_mask_bitmap(1, board)
     assert number_of_connected(p, m) == 1
     assert number_of_connected(pp, mm) == 3
-    board = initialize_game_state()
-    board[0, 0:7] = [2, 2, 2, 1, 2, 1, 1]
-    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
-    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 2]
-    board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    p, m = get_position_mask_bitmap(2, board)
-    pp, mm = get_position_mask_bitmap(1, board)
-    assert number_of_connected(p, m) == 1
-    assert number_of_connected(pp, mm) == 1
+
     board = initialize_game_state()
     board[0, 0:7] = [2, 2, 2, 2, 0, 1, 1]
     board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
@@ -449,6 +408,7 @@ def test_number_of_connected():
     pp, mm = get_position_mask_bitmap(1, board)
     assert number_of_connected(p, m) == 4
     assert number_of_connected(pp, mm) == 2
+
     board = initialize_game_state()
     board[0, 0:7] = [2, 1, 2, 2, 1, 1, 1]
     board[1, 0:7] = [2, 0, 1, 1, 2, 0, 1]
@@ -460,6 +420,7 @@ def test_number_of_connected():
     pp, mm = get_position_mask_bitmap(1, board)
     assert number_of_connected(p, m) == 2
     assert number_of_connected(pp, mm) == 4
+
     board = initialize_game_state()
     board[0, 0:7] = [2, 1, 2, 2, 1, 1, 1]
     board[1, 0:7] = [2, 0, 1, 1, 2, 0, 1]
@@ -471,16 +432,25 @@ def test_number_of_connected():
     pp, mm = get_position_mask_bitmap(1, board)
     assert number_of_connected(p, m) == 4
     assert number_of_connected(pp, mm) == 2
+
+
+def test_generate_move_montecarlo():
     board = initialize_game_state()
-    board[0, 0:7] = [2, 2, 0, 1, 0, 1, 1]
-    board[1, 0:7] = [2, 0, 0, 0, 0, 0, 1]
-    board[2, 0:7] = [1, 0, 0, 0, 0, 0, 2]
+    board[0, 0:7] = [0, 2, 1, 1, 2, 0, 0]
+    board[1, 0:7] = [0, 0, 2, 1, 1, 0, 0]
+    board[2, 0:7] = [0, 0, 0, 2, 2, 0, 0]
     board[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
     board[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
-    p, m = get_position_mask_bitmap(2, board)
-    pp, mm = get_position_mask_bitmap(1, board)
-    assert number_of_connected(p, m) == 1
-    assert number_of_connected(pp, mm) == 1
+    move, ss = generate_move_montecarlo(board,1,None)
+    assert move == 4
 
-
+    board1 = initialize_game_state()
+    board1[0, 0:7] = [0, 2, 1, 1, 2, 0, 0]
+    board1[1, 0:7] = [0, 0, 2, 1, 1, 0, 0]
+    board1[2, 0:7] = [0, 0, 0, 1, 2, 0, 0]
+    board1[3, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board1[4, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    board1[5, 0:7] = [0, 0, 0, 0, 0, 0, 0]
+    move1, ss = generate_move_montecarlo(board1,1,None)
+    assert move1 == 3
